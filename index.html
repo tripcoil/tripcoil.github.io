@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TripCoil | Wire Tracing & Substation Tools</title>
     <style>
-        /* Modern, clean styling for technical tools */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; 
             line-height: 1.6; 
@@ -23,7 +22,6 @@
         h1 { margin: 0; color: #007bff; font-size: 2.5rem; }
         p.subtitle { font-size: 1.1rem; color: #586069; }
         
-        /* Grid Layout for Project Cards */
         #project-list { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
@@ -31,7 +29,6 @@
             margin-top: 20px; 
         }
         
-        /* Card Styling */
         .card { 
             background: white; 
             padding: 24px; 
@@ -44,4 +41,109 @@
         }
         .card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .card h3 { margin-top: 0; color: #0366d6; text-transform: capitalize; }
+        .card p { flex-grow: 1; color: #444; font-size: 0.95rem; }
+        
+        .btn { 
+            display: inline-block; 
+            background: #007bff; 
+            color: white; 
+            padding: 12px 20px; 
+            text-decoration: none; 
+            border-radius: 6px; 
+            font-weight: bold;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .btn:hover { background: #0056b3; }
+        
+        .tag { 
+            font-size: 0.75rem; 
+            background: #e1f5fe; 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            color: #0288d1; 
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            margin-top: 50px;
+            font-size: 0.85rem;
+            color: #6a737d;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>TripCoil</h1>
+        <p class="subtitle">Pet projects for substation engineering and wire tracing.</p>
+    </header>
+
+    <div id="project-list">
+        <p>Scanning GitHub for wire-tracing tools...</p>
+    </div>
+
+    <footer>
+        &copy; 2026 TripCoil. Dedicated to better wire tracing.
+    </footer>
+
+    <script>
+        const GITHUB_USERNAME = 'tripcoil'; 
+
+        async function fetchTools() {
+            const container = document.getElementById('project-list');
+            try {
+                // Fetch public repositories from GitHub
+                const response = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated`);
+                
+                if (!response.ok) throw new Error('Failed to fetch projects');
+                
+                const repos = await response.json();
+                container.innerHTML = ''; 
+
+                let foundTools = 0;
+
+                repos.forEach(repo => {
+                    // Check for the "wire-tracing" topic
+                    if (repo.topics && repo.topics.includes('wire-tracing')) {
+                        foundTools++;
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        
+                        const displayName = repo.name.replace(/-/g, ' ');
+
+                        card.innerHTML = `
+                            <span class="tag">Substation Tool</span>
+                            <h3>${displayName}</h3>
+                            <p>${repo.description || 'No description provided.'}</p>
+                            <a href="https://tripcoil.com/${repo.name}" class="btn">Launch Tool</a>
+                        `;
+                        container.appendChild(card);
+                    }
+                });
+
+                if (foundTools === 0) {
+                    container.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #fff; border-radius: 8px; border: 1px dashed #ccc;">
+                            <p>No repositories found with the topic <strong>"wire-tracing"</strong>.</p>
+                            <p><small>Make sure your tool repos are <strong>Public</strong> and tagged with the <strong>wire-tracing</strong> topic.</small></p>
+                        </div>`;
+                }
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<p>Error loading projects. Please check your internet connection or GitHub username.</p>';
+            }
+        }
+
+        fetchTools();
+    </script>
+</body>
+</html>
