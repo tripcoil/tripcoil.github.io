@@ -3,8 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TripCoil Systems - A collection of live tools and modules. Browse and launch GitHub-hosted utilities and applications.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://tripcoil.com/">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <title>TripCoil | Systems</title>
     <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         body { 
             font-family: 'Courier New', Courier, monospace; 
             line-height: 1.6; 
@@ -15,6 +23,22 @@
             color: #7d8590; 
         }
 
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            background: #58a6ff;
+            color: #0d1117;
+            padding: 10px 15px;
+            text-decoration: none;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+        .skip-link:focus {
+            left: 10px;
+            top: 10px;
+        }
+
         header {
             border-bottom: 1px solid #30363d;
             margin-bottom: 40px;
@@ -22,6 +46,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         h1 { 
@@ -37,13 +63,69 @@
             color: #238636;
             letter-spacing: 1px;
         }
+
         .status-online::before {
             content: "●";
             margin-right: 8px;
             animation: blink 2s infinite;
         }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
+        @keyframes blink { 
+            0%, 100% { opacity: 1; } 
+            50% { opacity: 0.3; } 
+        }
+
+        /* Search Section */
+        .search-container {
+            margin-bottom: 30px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: #f0f6fc;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+
+        .search-input::placeholder {
+            color: #8b949e;
+        }
+
+        .search-btn {
+            padding: 12px 20px;
+            background: transparent;
+            border: 1px solid #58a6ff;
+            color: #58a6ff;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .search-btn:hover,
+        .search-btn:focus {
+            background: #58a6ff;
+            color: #0d1117;
+        }
+
+        /* Project Grid */
         #project-list { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
@@ -54,12 +136,13 @@
             background: #0d1117; 
             padding: 20px; 
             border: 1px solid #30363d;
-            transition: all 0.15s ease-in-out;
+            transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
             display: flex;
             flex-direction: column;
         }
 
-        .card:hover {
+        .card:hover,
+        .card:focus-within {
             border-color: #58a6ff;
             background: #161b22;
         }
@@ -71,10 +154,17 @@
             text-transform: uppercase;
         }
 
+        .card-description {
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
         .update-stamp {
             font-size: 0.7rem;
             color: #8b949e;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             letter-spacing: 1px;
         }
         
@@ -90,11 +180,14 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: 0.2s;
+            margin-top: auto;
         }
 
-        .btn:hover { 
+        .btn:hover,
+        .btn:focus { 
             background: #58a6ff; 
             color: #0d1117;
+            outline: none;
         }
 
         .tag { 
@@ -104,61 +197,219 @@
             text-transform: uppercase;
         }
 
-        .loading { font-size: 0.9rem; color: #8b949e; }
-    </style>
-</head>
-<body>
+        .loading { 
+            font-size: 0.9rem; 
+            color: #8b949e;
+            grid-column: 1 / -1;
+        }
 
-    <header>
-        <h1>TripCoil</h1>
-        <div class="status-online">SYSTEMS_ACTIVE</div>
-    </header>
+        .error-message {
+            color: #f85149;
+            grid-column: 1 / -1;
+        }
 
-    <div id="project-list">
-        <p class="loading">INITIATING_GITHUB_UPLINK...</p>
-    </div>
+        .no-results {
+            color: #8b949e;
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+        }
 
-    <script>
-        const GITHUB_USERNAME = 'tripcoil'; 
-
-        async function fetchTools() {
-            const container = document.getElementById('project-list');
-            try {
-                const response = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated`);
-                if (!response.ok) throw new Error('UPLINK_FAILURE');
-                
-                const repos = await response.json();
-                container.innerHTML = ''; 
-
-                repos.forEach(repo => {
-                    if (repo.name.toLowerCase() !== `${GITHUB_USERNAME}.github.io`.toLowerCase()) {
-                        const card = document.createElement('div');
-                        card.className = 'card';
-                        
-                        // Format the date to YYYY.MM.DD
-                        const dateObj = new Date(repo.pushed_at);
-                        const lastUpdated = dateObj.toISOString().split('T')[0].replace(/-/g, '.');
-
-                        const displayName = repo.name.replace(/-/g, '_').toUpperCase();
-
-                        card.innerHTML = `
-                            <span class="tag">[MODULE_LIVE]</span>
-                            <h3>${displayName}</h3>
-                            <div class="update-stamp">LST_UPD: ${lastUpdated}</div>
-                            <a href="https://tripcoil.com/${repo.name}" class="btn">Launch Tool</a>
-                        `;
-                        container.appendChild(card);
-                    }
-                });
-
-                if (container.innerHTML === '') {
-                    container.innerHTML = '<p>NO_PUBLIC_REPOS_IDENTIFIED</p>';
-                }
-            } catch (err) {
-                container.innerHTML = '<p style="color: #f85149;">CONNECTION_ERROR_ST01</p>';
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            @keyframes blink { 
+                0%, 100% { opacity: 1; } 
+            }
+            .card,
+            .btn,
+            .search-input,
+            .search-btn { 
+                transition: none; 
             }
         }
 
+        /* Mobile adjustments */
+        @media (max-width: 480px) {
+            body {
+                padding: 30px 15px;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#project-list" class="skip-link">Skip to projects</a>
+
+    <header>
+        <h1>TripCoil</h1>
+        <div class="status-online" aria-label="System status: online">SYSTEMS_ACTIVE</div>
+    </header>
+
+    <search class="search-container">
+        <form class="search-form" role="search" onsubmit="return false;">
+            <label for="project-search" class="visually-hidden" style="position:absolute;left:-9999px;">Search projects</label>
+            <input 
+                type="search" 
+                id="project-search" 
+                name="q"
+                class="search-input" 
+                placeholder="FILTER_MODULES..." 
+                aria-label="Search through site content"
+                autocomplete="off"
+            >
+            <button type="button" class="search-btn" onclick="filterProjects()">Search</button>
+        </form>
+    </search>
+
+    <main id="project-list" role="main" aria-live="polite" aria-label="Project modules">
+        <p class="loading" aria-busy="true">INITIATING_GITHUB_UPLINK...</p>
+    </main>
+
+    <script>
+        const GITHUB_USERNAME = 'tripcoil';
+        let allRepos = [];
+
+        async function fetchTools() {
+            const container = document.getElementById('project-list');
+            const cacheKey = 'tripcoil_repos';
+            const cacheTime = 5 * 60 * 1000; // 5 minutes
+
+            // Check cache first
+            try {
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    const { data, timestamp } = JSON.parse(cached);
+                    if (Date.now() - timestamp < cacheTime) {
+                        allRepos = data;
+                        renderRepos(data, container);
+                        return;
+                    }
+                }
+            } catch (e) {
+                // Cache read failed, continue with fetch
+            }
+
+            try {
+                const response = await fetch(
+                    `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated`,
+                    { 
+                        headers: { 
+                            'Accept': 'application/vnd.github.v3+json' 
+                        } 
+                    }
+                );
+                
+                if (!response.ok) throw new Error('UPLINK_FAILURE');
+                
+                const repos = await response.json();
+                allRepos = repos;
+
+                // Cache the results
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify({ 
+                        data: repos, 
+                        timestamp: Date.now() 
+                    }));
+                } catch (e) {
+                    // Cache write failed, continue anyway
+                }
+
+                renderRepos(repos, container);
+
+            } catch (err) {
+                container.innerHTML = '<p class="error-message" role="alert">CONNECTION_ERROR_ST01</p>';
+            }
+        }
+
+        function renderRepos(repos, container) {
+            container.innerHTML = '';
+
+            const filteredRepos = repos.filter(repo => 
+                repo.name.toLowerCase() !== `${GITHUB_USERNAME}.github.io`.toLowerCase()
+            );
+
+            if (filteredRepos.length === 0) {
+                container.innerHTML = '<p class="no-results">NO_PUBLIC_REPOS_IDENTIFIED</p>';
+                return;
+            }
+
+            filteredRepos.forEach(repo => {
+                const card = document.createElement('article');
+                card.className = 'card';
+                
+                // Format the date to YYYY.MM.DD
+                const dateObj = new Date(repo.pushed_at);
+                const lastUpdated = dateObj.toISOString().split('T')[0].replace(/-/g, '.');
+
+                const displayName = repo.name.replace(/-/g, '_').toUpperCase();
+                const description = repo.description || 'No description available';
+
+                card.innerHTML = `
+                    <span class="tag" aria-hidden="true">[MODULE_LIVE]</span>
+                    <h3>${escapeHtml(displayName)}</h3>
+                    <p class="card-description">${escapeHtml(description)}</p>
+                    <div class="update-stamp">LST_UPD: ${lastUpdated}</div>
+                    <a href="https://tripcoil.com/${encodeURIComponent(repo.name)}" class="btn">Launch Tool</a>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterProjects() {
+            const searchTerm = document.getElementById('project-search').value.toLowerCase().trim();
+            const container = document.getElementById('project-list');
+
+            if (!searchTerm) {
+                renderRepos(allRepos, container);
+                return;
+            }
+
+            const filtered = allRepos.filter(repo => {
+                const name = repo.name.toLowerCase();
+                const desc = (repo.description || '').toLowerCase();
+                return name.includes(searchTerm) || desc.includes(searchTerm);
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p class="no-results">NO_MATCHING_MODULES_FOUND</p>';
+                return;
+            }
+
+            renderRepos(filtered, container);
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Enable real-time filtering as user types
+        document.getElementById('project-search').addEventListener('input', function(e) {
+            filterProjects();
+        });
+
+        // Allow Enter key to trigger search
+        document.getElementById('project-search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                filterProjects();
+            }
+        });
+
+        // Initialize
         fetchTools();
     </script>
 </body>
