@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TripCoil | Systems</title>
     <style>
-        /* "Badass" Minimalist Dark Mode */
         body { 
-            font-family: 'Courier New', Courier, monospace; /* Terminal vibe */
+            font-family: 'Courier New', Courier, monospace; 
             line-height: 1.6; 
             max-width: 1000px; 
             margin: 0 auto; 
             padding: 60px 20px; 
-            background-color: #010409; /* Deeper Black */
+            background-color: #010409; 
             color: #7d8590; 
         }
 
@@ -33,7 +32,6 @@
             text-transform: uppercase;
         }
 
-        /* Status Indicator Animation */
         .status-online {
             font-size: 0.8rem;
             color: #238636;
@@ -52,7 +50,6 @@
             gap: 15px; 
         }
         
-        /* Tactical Card Styling */
         .card { 
             background: #0d1117; 
             padding: 20px; 
@@ -65,21 +62,20 @@
         .card:hover {
             border-color: #58a6ff;
             background: #161b22;
-            transform: scale(1.02);
         }
 
         .card h3 { 
-            margin: 0 0 10px 0; 
-            color: #58a6ff; 
+            margin: 0 0 5px 0; 
+            color: #f0f6fc; 
             font-size: 1.1rem;
             text-transform: uppercase;
         }
 
-        .card p { 
-            flex-grow: 1; 
-            color: #8b949e; 
-            font-size: 0.85rem;
+        .update-stamp {
+            font-size: 0.7rem;
+            color: #8b949e;
             margin-bottom: 20px;
+            letter-spacing: 1px;
         }
         
         .btn { 
@@ -102,13 +98,12 @@
         }
 
         .tag { 
-            font-size: 0.65rem; 
+            font-size: 0.6rem; 
             color: #238636;
             margin-bottom: 5px;
             text-transform: uppercase;
         }
 
-        /* Loading State */
         .loading { font-size: 0.9rem; color: #8b949e; }
     </style>
 </head>
@@ -140,13 +135,17 @@
                         const card = document.createElement('div');
                         card.className = 'card';
                         
+                        // Format the date to YYYY.MM.DD
+                        const dateObj = new Date(repo.pushed_at);
+                        const lastUpdated = dateObj.toISOString().split('T')[0].replace(/-/g, '.');
+
                         const displayName = repo.name.replace(/-/g, '_').toUpperCase();
 
                         card.innerHTML = `
-                            <span class="tag">[MODULE_READY]</span>
+                            <span class="tag">[MODULE_LIVE]</span>
                             <h3>${displayName}</h3>
-                            <p>${repo.description || 'NO_DATA_STRING_FOUND'}</p>
-                            <a href="https://tripcoil.com/${repo.name}" class="btn">Execute</a>
+                            <div class="update-stamp">LST_UPD: ${lastUpdated}</div>
+                            <a href="https://tripcoil.com/${repo.name}" class="btn">Launch Tool</a>
                         `;
                         container.appendChild(card);
                     }
