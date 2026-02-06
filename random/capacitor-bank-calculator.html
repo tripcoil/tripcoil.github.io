@@ -4,433 +4,167 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3-Phase Capacitor Bank Calculator</title>
+    <link rel="stylesheet" href="tokens.css">
     <style>
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        h1, h2, h3, h4 {
-            color: #e2e8f0;
-            margin-bottom: 16px;
-        }
-
-        h1 {
-            font-size: 1.75rem;
-            font-weight: 600;
-            border-bottom: 2px solid #3b82f6;
-            padding-bottom: 12px;
-            margin-bottom: 24px;
-        }
-
-        h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #3b82f6;
-        }
-
-        h3 {
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        .card {
-            background: #1e293b;
-            border: 1px solid #475569;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .grid {
-            display: grid;
-            gap: 20px;
-        }
-
-        .grid-2 {
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        }
-
-        .grid-3 {
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        }
-
-        label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #94a3b8;
-            margin-bottom: 4px;
-        }
-
-        input[type="number"],
-        input[type="text"],
-        select {
-            width: 100%;
-            padding: 8px 12px;
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            color: #e2e8f0;
-            font-size: 0.875rem;
-            font-family: 'Consolas', 'Monaco', monospace;
-        }
-
-        input[type="number"]:focus,
-        input[type="text"]:focus,
-        select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-
-        input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: #3b82f6;
-        }
-
-        button {
-            padding: 10px 20px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        button:hover {
-            background: #2563eb;
-        }
-
-        button.secondary {
-            background: #334155;
-            border: 1px solid #475569;
-        }
-
-        button.secondary:hover {
-            background: #475569;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .input-group {
-            margin-bottom: 16px;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 16px;
-            align-items: end;
-            margin-bottom: 16px;
-        }
-
-        .input-row .input-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
-        .unit {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-left: 4px;
-        }
-
-        .results {
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            padding: 16px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.875rem;
-            white-space: pre-wrap;
-            overflow-x: auto;
-        }
-
-        .results .value {
-            color: #3b82f6;
-            font-weight: 600;
-        }
-
-        .results .success {
-            color: #10b981;
-        }
-
-        .results .warning {
-            color: #f59e0b;
-        }
-
-        .results .error {
-            color: #ef4444;
-        }
-
-        .show-work {
-            margin-top: 16px;
-        }
-
-        .show-work summary {
-            cursor: pointer;
-            color: #3b82f6;
-            font-size: 0.875rem;
-            padding: 8px 0;
-        }
-
-        .show-work summary:hover {
-            text-decoration: underline;
-        }
-
-        .show-work-content {
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            padding: 16px;
-            margin-top: 8px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.8rem;
-            white-space: pre-wrap;
-        }
-
-        canvas {
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            display: block;
-            max-width: 100%;
-        }
-
-        .canvas-container {
-            position: relative;
-        }
-
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-top: 12px;
-            font-size: 0.8rem;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .legend-color {
-            width: 16px;
-            height: 3px;
-            border-radius: 1px;
-        }
-
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .status-ok {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            border: 1px solid #10b981;
-        }
-
-        .status-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
-            border: 1px solid #f59e0b;
-        }
-
-        .status-error {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            border: 1px solid #ef4444;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: #94a3b8;
-            text-decoration: none;
-            font-size: 0.875rem;
-            margin-bottom: 16px;
-        }
-
-        .back-link:hover {
-            color: #3b82f6;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
-        }
-
-        th, td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid #475569;
-        }
-
-        th {
-            background: #0f172a;
-            color: #94a3b8;
-            font-weight: 500;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        tr:hover td {
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        /* Print styles */
-        @media print {
-            body {
-                background: white;
-                color: black;
-            }
-            .card {
-                background: white;
-                border: 1px solid #ccc;
-            }
-            .results, .show-work-content {
-                background: #f5f5f5;
-                border: 1px solid #ccc;
-            }
-            canvas {
-                background: white;
-                border: 1px solid #ccc;
-            }
-            button, .back-link {
-                display: none;
-            }
-        }
-
-        /* Mobile responsive */
-        @media (max-width: 768px) {
-            .container {
-                padding: 12px;
-            }
-            h1 {
-                font-size: 1.5rem;
-            }
-            .input-row {
-                flex-direction: column;
-                gap: 12px;
-            }
-            .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
-            }
-        }
-    
         .main-layout {
             display: grid;
             grid-template-columns: 400px 1fr;
-            gap: 20px;
+            gap: var(--space-lg);
         }
+
         .config-panel {
-            max-height: calc(100vh - 120px);
+            padding: var(--space-lg);
+            background: var(--bg-subtle);
+            border-radius: var(--radius-md);
+            max-height: calc(100vh - 160px);
             overflow-y: auto;
         }
+
         .section-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #94a3b8;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin: 20px 0 12px 0;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #475569;
+            margin: var(--space-lg) 0 var(--space-md) 0;
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--bg-hover);
         }
+
         .section-title:first-child {
             margin-top: 0;
         }
+
         .input-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: var(--space-md);
         }
+
         .phase-section {
-            background: #0f172a;
-            border-radius: 4px;
-            padding: 12px;
-            margin-bottom: 12px;
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: var(--space-md);
+            margin-bottom: var(--space-md);
         }
+
         .phase-section h4 {
-            margin: 0 0 12px 0;
+            margin: 0 0 var(--space-md) 0;
             font-size: 0.875rem;
         }
-        .phase-A h4 { color: #ef4444; }
-        .phase-B h4 { color: #22c55e; }
-        .phase-C h4 { color: #3b82f6; }
+
+        .phase-A h4 { color: var(--phase-a); }
+        .phase-B h4 { color: var(--phase-b); }
+        .phase-C h4 { color: var(--phase-c); }
+
         .branch-section {
-            margin-left: 12px;
-            padding-left: 12px;
-            border-left: 2px solid #475569;
-            margin-bottom: 8px;
+            margin-left: var(--space-md);
+            padding-left: var(--space-md);
+            border-left: 2px solid var(--bg-hover);
+            margin-bottom: var(--space-sm);
         }
+
         .can-row {
             display: grid;
             grid-template-columns: 1fr 80px;
-            gap: 8px;
-            margin-bottom: 6px;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-xs);
         }
+
+        .apply-btn {
+            width: 100%;
+            margin-top: var(--space-md);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--text);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--bg);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .apply-btn:hover {
+            opacity: 0.9;
+        }
+
+        .apply-btn.secondary {
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+        }
+
+        .apply-btn.secondary:hover {
+            background: var(--bg);
+        }
+
+        .results-panel {
+            padding: var(--space-lg);
+            background: var(--bg-subtle);
+            border-radius: var(--radius-md);
+        }
+
+        .results-panel h2 {
+            font-size: 1rem;
+            margin-bottom: var(--space-lg);
+        }
+
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 20px;
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
         }
+
         .summary-item {
-            background: #0f172a;
-            padding: 16px;
-            border-radius: 4px;
+            background: var(--bg);
+            padding: var(--space-lg);
+            border-radius: var(--radius-sm);
             text-align: center;
         }
+
         .summary-item .label {
             font-size: 0.75rem;
-            color: #64748b;
-            margin-bottom: 4px;
+            color: var(--text-muted);
+            margin-bottom: var(--space-xs);
         }
+
         .summary-item .value {
             font-size: 1.5rem;
             font-weight: 600;
-            font-family: 'Consolas', monospace;
-            color: #3b82f6;
+            font-family: var(--font-mono);
+            color: var(--text);
         }
+
         .summary-item .unit {
             font-size: 0.75rem;
-            color: #94a3b8;
+            color: var(--text-secondary);
         }
+
+        .results-output {
+            background: var(--bg);
+            padding: var(--space-lg);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .results-output .value { color: var(--text); font-weight: 600; }
+        .results-output .warning { color: var(--warning); }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 0.875rem;
+        }
+
+        .checkbox-label input {
+            accent-color: var(--text);
+        }
+
         @media (max-width: 1000px) {
             .main-layout {
                 grid-template-columns: 1fr;
@@ -443,11 +177,16 @@
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="back-link">← Back to Tools</a>
+        <header class="header">
+            <a href="/random/" class="header-back">← Relay Tools</a>
+            <span class="header-title">Cap Bank Calculator</span>
+        </header>
+
         <h1>3-Phase Capacitor Bank Calculator</h1>
+        <p class="tagline">Calculate capacitor bank VAR output and voltage distribution</p>
 
         <div class="main-layout">
-            <div class="config-panel card">
+            <div class="config-panel">
                 <div class="section-title">System Parameters</div>
                 <div class="input-grid">
                     <div class="input-group">
@@ -497,39 +236,39 @@
                         <input type="number" id="parallel_elements" value="1" min="1">
                     </div>
                 </div>
-                <button onclick="setUniformMain()" style="width:100%; margin-top:12px;">Apply Uniform Configuration</button>
+                <button class="apply-btn" onclick="setUniformMain()">Apply Uniform Configuration</button>
 
                 <div class="section-title">Voltage Divider (Grounded Wye)</div>
                 <div class="input-grid">
                     <div class="input-group">
-                        <label><input type="checkbox" id="enable_divider" checked> Enable Divider</label>
+                        <label class="checkbox-label"><input type="checkbox" id="enable_divider" checked> Enable Divider</label>
                     </div>
                     <div class="input-group">
                         <label>Divider Capacitance (µF)</label>
                         <input type="number" id="uniform_div_C" value="650">
                     </div>
                 </div>
-                <button class="secondary" onclick="setUniformDivider()" style="width:100%; margin-top:12px;">Apply Divider</button>
+                <button class="apply-btn secondary" onclick="setUniformDivider()">Apply Divider</button>
 
                 <div class="section-title">Series Reactor</div>
                 <div class="input-grid">
                     <div class="input-group">
-                        <label><input type="checkbox" id="enable_reactor"> Enable Reactor</label>
+                        <label class="checkbox-label"><input type="checkbox" id="enable_reactor"> Enable Reactor</label>
                     </div>
                     <div class="input-group">
                         <label>Inductance (mH)</label>
                         <input type="number" id="uniform_L" value="1">
                     </div>
                 </div>
-                <button class="secondary" onclick="setUniformReactor()" style="width:100%; margin-top:12px;">Apply Reactor</button>
+                <button class="apply-btn secondary" onclick="setUniformReactor()">Apply Reactor</button>
 
                 <div class="section-title">Per-Phase Configuration</div>
                 <div id="phases"></div>
 
-                <button onclick="compute()" style="width:100%; margin-top:20px; font-size:1rem; padding:14px;">Calculate</button>
+                <button class="apply-btn" onclick="compute()" style="margin-top: var(--space-xl);">Calculate</button>
             </div>
 
-            <div class="card">
+            <div class="results-panel">
                 <h2>Results</h2>
 
                 <div class="summary-grid">
@@ -550,16 +289,15 @@
                     </div>
                 </div>
 
-                <div class="results" id="results" style="min-height:400px;"></div>
+                <div class="results-output" id="results"></div>
             </div>
         </div>
 
-        <details class="show-work">
-            <summary>Show Formulas</summary>
-            <div class="show-work-content">
-Capacitor Bank Calculations (IEEE Std 18):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+        <div class="drawer-trigger" id="stepToggle">See formulas →</div>
+        <div class="step-content" id="stepContent">
+<div class="step-section">
+<div class="step-title">Capacitor Bank Calculations (IEEE Std 18)</div>
+<pre>
 Phase Voltage:
   Wye:   V_ph = V_LL / √3
   Delta: V_ph = V_LL
@@ -579,10 +317,11 @@ Total 3-Phase:
 Line Current:
   Wye:   I_line = I_ph
   Delta: I_line = √3 × I_ph
-
-Effective Capacitance with Failed Elements:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+</pre>
+</div>
+<div class="step-section">
+<div class="step-title">Effective Capacitance with Failed Elements</div>
+<pre>
 Fuseless (shorted elements):
   C_eff = C_nom × S / (S - n_failed)
   where S = series groups
@@ -591,66 +330,12 @@ Fused (open elements):
   Elements are distributed across series groups
   Each group: C_group = (P - k) / P × C_group_nom
   where P = parallel elements, k = failed in that group
-            </div>
-        </details>
+</pre>
+</div>
+        </div>
     </div>
 
     <script>
-
-        function validateNumber(value, min, max, fieldName) {
-            const num = parseFloat(value);
-            if (isNaN(num)) {
-                return { valid: false, error: `${fieldName} must be a valid number` };
-            }
-            if (min !== null && num < min) {
-                return { valid: false, error: `${fieldName} must be >= ${min}` };
-            }
-            if (max !== null && num > max) {
-                return { valid: false, error: `${fieldName} must be <= ${max}` };
-            }
-            return { valid: true, value: num };
-        }
-
-        function validatePositive(value, fieldName) {
-            const result = validateNumber(value, 0.0001, null, fieldName);
-            if (!result.valid) return result;
-            if (result.value <= 0) {
-                return { valid: false, error: `${fieldName} must be positive` };
-            }
-            return result;
-        }
-
-        function validateNonNegative(value, fieldName) {
-            return validateNumber(value, 0, null, fieldName);
-        }
-
-        function showError(message) {
-            alert('Input Error: ' + message);
-        }
-
-        function formatEngineering(value, decimals = 4) {
-            if (Math.abs(value) === 0) return '0';
-            if (Math.abs(value) >= 1e6) return (value / 1e6).toFixed(decimals) + ' M';
-            if (Math.abs(value) >= 1e3) return (value / 1e3).toFixed(decimals) + ' k';
-            if (Math.abs(value) >= 1) return value.toFixed(decimals);
-            if (Math.abs(value) >= 1e-3) return (value * 1e3).toFixed(decimals) + ' m';
-            if (Math.abs(value) >= 1e-6) return (value * 1e6).toFixed(decimals) + ' μ';
-            return value.toExponential(decimals);
-        }
-
-        function formatAngle(degrees) {
-            return degrees.toFixed(2) + '°';
-        }
-
-        function formatComplex(re, im, decimals = 4) {
-            const sign = im >= 0 ? '+' : '-';
-            return `${re.toFixed(decimals)} ${sign} j${Math.abs(im).toFixed(decimals)}`;
-        }
-
-        function formatPolar(mag, angDeg, decimals = 4) {
-            return `${mag.toFixed(decimals)} ∠ ${angDeg.toFixed(2)}°`;
-        }
-    
         let phases = {
             A: { branches: [], divider: {nominal: 0, failed: 0}, reactor: 0 },
             B: { branches: [], divider: {nominal: 0, failed: 0}, reactor: 0 },
@@ -660,14 +345,13 @@ Fused (open elements):
         function renderPhases() {
             const container = document.getElementById('phases');
             container.innerHTML = '';
-            const phaseColors = {'A': '#ef4444', 'B': '#22c55e', 'C': '#3b82f6'};
+            const phaseColors = {'A': 'var(--phase-a)', 'B': 'var(--phase-b)', 'C': 'var(--phase-c)'};
 
             for (let phase in phases) {
                 const phaseDiv = document.createElement('div');
                 phaseDiv.className = `phase-section phase-${phase}`;
                 phaseDiv.innerHTML = `<h4>Phase ${phase}</h4>`;
 
-                // Reactor
                 const reactDiv = document.createElement('div');
                 reactDiv.className = 'input-group';
                 reactDiv.innerHTML = `<label>Reactor (mH)</label>
@@ -675,7 +359,6 @@ Fused (open elements):
                            onchange="updateReactor('${phase}', this.value)" step="0.1">`;
                 phaseDiv.appendChild(reactDiv);
 
-                // Divider
                 const divDiv = document.createElement('div');
                 divDiv.className = 'can-row';
                 divDiv.innerHTML = `
@@ -685,7 +368,6 @@ Fused (open elements):
                            onchange="updateDividerFailed('${phase}', this.value)" placeholder="Failed">`;
                 phaseDiv.appendChild(divDiv);
 
-                // Branches
                 phases[phase].branches.forEach((branch, bIdx) => {
                     const branchDiv = document.createElement('div');
                     branchDiv.className = 'branch-section';
@@ -757,7 +439,7 @@ Fused (open elements):
         }
 
         function updateReactor(phase, value) {
-            phases[phase].reactor = parseFloat(value) / 1000;  // mH to H
+            phases[phase].reactor = parseFloat(value) / 1000;
         }
 
         function calculateEffectiveC(can_type, nominal, failed, s, p) {
@@ -824,13 +506,15 @@ Fused (open elements):
             const omega = 2 * Math.PI * frequency;
             const V_ph = getPhaseVoltage(voltage_ll, connection);
 
-            let resultsText = `<span class="value">System Configuration</span>\n`;
-            resultsText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-            resultsText += `Connection: ${connection === 'wye' ? 'Grounded Wye' : 'Delta'}\n`;
-            resultsText += `Frequency: ${frequency} Hz\n`;
-            resultsText += `Line-to-Line Voltage: ${(voltage_ll/1000).toFixed(1)} kV\n`;
-            resultsText += `Phase Voltage: ${(V_ph/1000).toFixed(3)} kV\n`;
-            resultsText += `Can Type: ${can_type === 'fuseless' ? 'Fuseless' : 'Internally Fused'}\n\n`;
+            let resultsText = `System Configuration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Connection: ${connection === 'wye' ? 'Grounded Wye' : 'Delta'}
+Frequency: ${frequency} Hz
+Line-to-Line Voltage: ${(voltage_ll/1000).toFixed(1)} kV
+Phase Voltage: ${(V_ph/1000).toFixed(3)} kV
+Can Type: ${can_type === 'fuseless' ? 'Fuseless' : 'Internally Fused'}
+
+`;
 
             let total_Q = 0.0;
             let I_phases = [];
@@ -871,21 +555,24 @@ Fused (open elements):
                     V_main = V_cap;
                 }
 
-                const phaseColor = {'A': '#ef4444', 'B': '#22c55e', 'C': '#3b82f6'}[phase];
-                resultsText += `<span style="color:${phaseColor}">━━━ Phase ${phase} ━━━</span>\n`;
-                resultsText += `Main Bank C: ${(C_main * 1e6).toFixed(4)} µF\n`;
+                resultsText += `━━━ Phase ${phase} ━━━
+Main Bank C: ${(C_main * 1e6).toFixed(4)} µF
+`;
                 if (L > 0) {
-                    resultsText += `Reactor: ${(L * 1000).toFixed(3)} mH, V_reactor: ${V_reactor.toFixed(2)} V\n`;
+                    resultsText += `Reactor: ${(L * 1000).toFixed(3)} mH, V_reactor: ${V_reactor.toFixed(2)} V
+`;
                 }
                 if (has_div) {
-                    resultsText += `Divider C: ${(C_div * 1e6).toFixed(2)} µF, V_tap: ${V_div.toFixed(2)} V\n`;
+                    resultsText += `Divider C: ${(C_div * 1e6).toFixed(2)} µF, V_tap: ${V_div.toFixed(2)} V
+`;
                 }
-                resultsText += `Total Phase C: ${(C_phase * 1e6).toFixed(4)} µF\n`;
-                resultsText += `Phase Current: <span class="value">${I_phase.toFixed(2)} A</span>\n`;
-                resultsText += `Phase VAR: ${(Q_phase/1e6).toFixed(4)} MVAR\n`;
-                resultsText += `V_main: ${(V_main/1000).toFixed(3)} kV\n\n`;
+                resultsText += `Total Phase C: ${(C_phase * 1e6).toFixed(4)} µF
+Phase Current: ${I_phase.toFixed(2)} A
+Phase VAR: ${(Q_phase/1e6).toFixed(4)} MVAR
+V_main: ${(V_main/1000).toFixed(3)} kV
 
-                // Per-branch details
+`;
+
                 phases[phase].branches.forEach((branch, bIdx) => {
                     let inv_C_series = 0;
                     let effective_cans = [];
@@ -899,13 +586,15 @@ Fused (open elements):
                     const C_branch = all_valid && inv_C_series > 0 ? 1 / inv_C_series : 0;
                     const I_branch = omega * C_branch * V_main;
 
-                    resultsText += `  Branch ${bIdx + 1}: C=${(C_branch * 1e6).toFixed(4)} µF, I=${I_branch.toFixed(2)} A\n`;
+                    resultsText += `  Branch ${bIdx + 1}: C=${(C_branch * 1e6).toFixed(4)} µF, I=${I_branch.toFixed(2)} A
+`;
 
                     branch.forEach((can, sIdx) => {
                         const effective = effective_cans[sIdx];
                         const V_can = effective > 0 ? I_branch / (omega * effective) : 0;
-                        let status = can.failed > 0 ? ` <span class="warning">[${can.failed} failed]</span>` : '';
-                        resultsText += `    Can ${sIdx + 1}: C=${(effective * 1e6).toFixed(3)} µF, V=${V_can.toFixed(1)} V${status}\n`;
+                        let status = can.failed > 0 ? ` [${can.failed} failed]` : '';
+                        resultsText += `    Can ${sIdx + 1}: C=${(effective * 1e6).toFixed(3)} µF, V=${V_can.toFixed(1)} V${status}
+`;
                     });
                 });
                 resultsText += '\n';
@@ -914,19 +603,22 @@ Fused (open elements):
             const avg_I_phase = I_phases.reduce((s, i) => s + i, 0) / 3;
             const I_line = connection === 'wye' ? avg_I_phase : Math.sqrt(3) * avg_I_phase;
 
-            // Update summary
             document.getElementById('totalMVAR').textContent = (total_Q / 1e6).toFixed(3);
             document.getElementById('lineCurrent').textContent = I_line.toFixed(1);
             document.getElementById('phaseVoltage').textContent = (V_ph / 1000).toFixed(2);
 
-            resultsText += `<span class="value">━━━ TOTALS ━━━</span>\n`;
-            resultsText += `Total 3-Phase VAR: <span class="value">${(total_Q / 1e6).toFixed(4)} MVAR</span>\n`;
-            resultsText += `Line Current: <span class="value">${I_line.toFixed(2)} A</span>\n`;
+            resultsText += `━━━ TOTALS ━━━
+Total 3-Phase VAR: ${(total_Q / 1e6).toFixed(4)} MVAR
+Line Current: ${I_line.toFixed(2)} A
+`;
 
-            document.getElementById('results').innerHTML = resultsText;
+            document.getElementById('results').textContent = resultsText;
         }
 
-        // Initialize
+        document.getElementById('stepToggle').addEventListener('click', () => {
+            document.getElementById('stepContent').classList.toggle('open');
+        });
+
         setUniformMain();
         compute();
     </script>

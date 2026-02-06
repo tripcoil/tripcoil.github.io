@@ -4,470 +4,133 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fault Current Calculator</title>
+    <link rel="stylesheet" href="tokens.css">
     <style>
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        .fault-types {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-sm);
+            margin-bottom: var(--space-xl);
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
-            line-height: 1.6;
-            min-height: 100vh;
+        .fault-type {
+            padding: var(--space-md);
+            background: transparent;
+            border: 1px solid var(--bg-hover);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
+        .fault-type:hover {
+            border-color: var(--text-secondary);
         }
 
-        h1, h2, h3, h4 {
-            color: #e2e8f0;
-            margin-bottom: 16px;
+        .fault-type.active {
+            background: var(--bg-hover);
+            border-color: var(--text);
+            color: var(--text);
         }
 
-        h1 {
+        .fault-type-icon {
+            font-size: 1.5rem;
+            margin-bottom: var(--space-xs);
+        }
+
+        .fault-type-label {
+            font-size: 0.75rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+        }
+
+        .result-card {
+            text-align: center;
+            padding: var(--space-lg);
+            background: var(--bg-subtle);
+            border-radius: var(--radius-sm);
+        }
+
+        .result-card-value {
             font-size: 1.75rem;
             font-weight: 600;
-            border-bottom: 2px solid #3b82f6;
-            padding-bottom: 12px;
-            margin-bottom: 24px;
+            font-family: var(--font-mono);
         }
 
-        h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #3b82f6;
-        }
-
-        h3 {
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        .card {
-            background: #1e293b;
-            border: 1px solid #475569;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .grid {
-            display: grid;
-            gap: 20px;
-        }
-
-        .grid-2 {
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        }
-
-        .grid-3 {
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        }
-
-        label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #94a3b8;
-            margin-bottom: 4px;
-        }
-
-        input[type="number"],
-        input[type="text"],
-        select {
-            width: 100%;
-            padding: 8px 12px;
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            color: #e2e8f0;
-            font-size: 0.875rem;
-            font-family: 'Consolas', 'Monaco', monospace;
-        }
-
-        input[type="number"]:focus,
-        input[type="text"]:focus,
-        select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-
-        input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: #3b82f6;
-        }
-
-        button {
-            padding: 10px 20px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        button:hover {
-            background: #2563eb;
-        }
-
-        button.secondary {
-            background: #334155;
-            border: 1px solid #475569;
-        }
-
-        button.secondary:hover {
-            background: #475569;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .input-group {
-            margin-bottom: 16px;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 16px;
-            align-items: end;
-            margin-bottom: 16px;
-        }
-
-        .input-row .input-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
-        .unit {
+        .result-card-label {
             font-size: 0.75rem;
-            color: #64748b;
-            margin-left: 4px;
+            color: var(--text-secondary);
+            margin-top: var(--space-xs);
         }
 
-        .results {
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            padding: 16px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.875rem;
-            white-space: pre-wrap;
-            overflow-x: auto;
+        .phase-results {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            line-height: 2;
         }
 
-        .results .value {
-            color: #3b82f6;
-            font-weight: 600;
-        }
-
-        .results .success {
-            color: #10b981;
-        }
-
-        .results .warning {
-            color: #f59e0b;
-        }
-
-        .results .error {
-            color: #ef4444;
-        }
-
-        .show-work {
-            margin-top: 16px;
-        }
-
-        .show-work summary {
-            cursor: pointer;
-            color: #3b82f6;
-            font-size: 0.875rem;
-            padding: 8px 0;
-        }
-
-        .show-work summary:hover {
-            text-decoration: underline;
-        }
-
-        .show-work-content {
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            padding: 16px;
-            margin-top: 8px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.8rem;
-            white-space: pre-wrap;
-        }
-
-        canvas {
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            display: block;
-            max-width: 100%;
-        }
-
-        .canvas-container {
-            position: relative;
-        }
-
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-top: 12px;
-            font-size: 0.8rem;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .legend-color {
-            width: 16px;
-            height: 3px;
-            border-radius: 1px;
-        }
-
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .status-ok {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            border: 1px solid #10b981;
-        }
-
-        .status-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
-            border: 1px solid #f59e0b;
-        }
-
-        .status-error {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            border: 1px solid #ef4444;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: #94a3b8;
-            text-decoration: none;
-            font-size: 0.875rem;
-            margin-bottom: 16px;
-        }
-
-        .back-link:hover {
-            color: #3b82f6;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
-        }
-
-        th, td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid #475569;
-        }
-
-        th {
-            background: #0f172a;
-            color: #94a3b8;
-            font-weight: 500;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        tr:hover td {
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        /* Print styles */
-        @media print {
-            body {
-                background: white;
-                color: black;
-            }
-            .card {
-                background: white;
-                border: 1px solid #ccc;
-            }
-            .results, .show-work-content {
-                background: #f5f5f5;
-                border: 1px solid #ccc;
-            }
-            canvas {
-                background: white;
-                border: 1px solid #ccc;
-            }
-            button, .back-link {
-                display: none;
-            }
-        }
-
-        /* Mobile responsive */
-        @media (max-width: 768px) {
-            .container {
-                padding: 12px;
-            }
-            h1 {
-                font-size: 1.5rem;
-            }
-            .input-row {
-                flex-direction: column;
-                gap: 12px;
-            }
-            .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
-            }
-        }
-    
-        .main-layout {
-            display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 20px;
-        }
-        .section-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 20px 0 12px 0;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #475569;
-        }
-        .section-title:first-child {
-            margin-top: 0;
-        }
-        .input-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .fault-type-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .fault-type-btn {
-            padding: 12px;
-            background: #0f172a;
-            border: 2px solid #475569;
-            border-radius: 4px;
-            color: #94a3b8;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s;
-        }
-        .fault-type-btn:hover {
-            border-color: #3b82f6;
-        }
-        .fault-type-btn.active {
-            border-color: #3b82f6;
-            background: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
-        }
-        .fault-type-btn .icon {
-            font-size: 1.5rem;
-            margin-bottom: 4px;
-        }
-        .fault-type-btn .label {
-            font-size: 0.75rem;
-        }
-        .results-summary {
+        .sequence-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: var(--space-md);
+            margin-top: var(--space-lg);
         }
-        .result-card {
-            background: #0f172a;
-            padding: 16px;
-            border-radius: 4px;
+
+        .seq-card {
             text-align: center;
+            padding: var(--space-md);
+            background: var(--bg-subtle);
+            border-radius: var(--radius-sm);
         }
-        .result-card .label {
+
+        .seq-card.pos { border-top: 2px solid var(--seq-pos); }
+        .seq-card.neg { border-top: 2px solid var(--seq-neg); }
+        .seq-card.zero { border-top: 2px solid var(--seq-zero); }
+
+        .seq-label {
             font-size: 0.75rem;
-            color: #64748b;
-            margin-bottom: 4px;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-sm);
         }
-        .result-card .value {
-            font-size: 1.25rem;
-            font-weight: 600;
-            font-family: 'Consolas', monospace;
-            color: #3b82f6;
+
+        .seq-value {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
         }
-        .result-card .unit {
-            font-size: 0.75rem;
-            color: #94a3b8;
-        }
-        .sequence-diagram {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 20px;
-        }
-        .seq-box {
-            background: #0f172a;
-            padding: 12px;
-            border-radius: 4px;
+
+        .advanced-toggle {
             text-align: center;
-        }
-        .seq-box.pos { border-top: 3px solid #f59e0b; }
-        .seq-box.neg { border-top: 3px solid #8b5cf6; }
-        .seq-box.zero { border-top: 3px solid #06b6d4; }
-        .seq-box .title {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-bottom: 8px;
-        }
-        .seq-box .z-value {
-            font-family: 'Consolas', monospace;
+            padding: var(--space-md) 0;
+            color: var(--text-secondary);
             font-size: 0.875rem;
+            cursor: pointer;
         }
-        .seq-box .i-value {
-            font-family: 'Consolas', monospace;
-            font-size: 1rem;
-            color: #3b82f6;
-            margin-top: 8px;
+
+        .advanced-toggle:hover {
+            color: var(--text);
         }
-        @media (max-width: 900px) {
-            .main-layout {
-                grid-template-columns: 1fr;
+
+        .advanced-inputs {
+            display: none;
+            margin-top: var(--space-lg);
+        }
+
+        .advanced-inputs.open {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .fault-types {
+                grid-template-columns: repeat(2, 1fr);
             }
-            .results-summary {
+            .results-grid,
+            .sequence-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -475,365 +138,198 @@
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="back-link">← Back to Tools</a>
-        <h1>Fault Current Calculator</h1>
+        <header class="header">
+            <a href="/random/" class="header-back">← Relay Tools</a>
+            <span class="header-title">Fault Current</span>
+        </header>
 
-        <div class="main-layout">
-            <div class="card">
-                <div class="section-title">Fault Type</div>
-                <div class="fault-type-grid">
-                    <div class="fault-type-btn active" onclick="setFaultType('3ph')" id="btn_3ph">
-                        <div class="icon">⚡</div>
-                        <div class="label">3-Phase</div>
-                    </div>
-                    <div class="fault-type-btn" onclick="setFaultType('slg')" id="btn_slg">
-                        <div class="icon">⏚</div>
-                        <div class="label">SLG (A-G)</div>
-                    </div>
-                    <div class="fault-type-btn" onclick="setFaultType('ll')" id="btn_ll">
-                        <div class="icon">↔</div>
-                        <div class="label">L-L (B-C)</div>
-                    </div>
-                    <div class="fault-type-btn" onclick="setFaultType('llg')" id="btn_llg">
-                        <div class="icon">⏚↔</div>
-                        <div class="label">L-L-G (B-C-G)</div>
-                    </div>
-                </div>
+        <h1>Fault Current</h1>
+        <p class="tagline">Calculate symmetrical and asymmetrical fault currents</p>
 
-                <div class="section-title">System Parameters</div>
-                <div class="input-grid">
-                    <div class="input-group">
-                        <label>Base MVA</label>
-                        <input type="number" id="baseMVA" value="100" step="1">
-                    </div>
-                    <div class="input-group">
-                        <label>Base kV (L-L)</label>
-                        <input type="number" id="baseKV" value="138" step="0.1">
-                    </div>
-                </div>
-
-                <div class="section-title">Sequence Impedances (p.u.)</div>
-                <div class="input-grid">
-                    <div class="input-group">
-                        <label>Z₁ Magnitude</label>
-                        <input type="number" id="Z1_mag" value="0.1" step="0.001">
-                    </div>
-                    <div class="input-group">
-                        <label>Z₁ Angle (°)</label>
-                        <input type="number" id="Z1_ang" value="85" step="0.1">
-                    </div>
-                    <div class="input-group">
-                        <label>Z₂ Magnitude</label>
-                        <input type="number" id="Z2_mag" value="0.1" step="0.001">
-                    </div>
-                    <div class="input-group">
-                        <label>Z₂ Angle (°)</label>
-                        <input type="number" id="Z2_ang" value="85" step="0.1">
-                    </div>
-                    <div class="input-group">
-                        <label>Z₀ Magnitude</label>
-                        <input type="number" id="Z0_mag" value="0.3" step="0.001">
-                    </div>
-                    <div class="input-group">
-                        <label>Z₀ Angle (°)</label>
-                        <input type="number" id="Z0_ang" value="80" step="0.1">
-                    </div>
-                </div>
-
-                <div class="section-title">Fault Impedance (p.u.)</div>
-                <div class="input-grid">
-                    <div class="input-group">
-                        <label>Zf Magnitude</label>
-                        <input type="number" id="Zf_mag" value="0" step="0.001">
-                    </div>
-                    <div class="input-group">
-                        <label>Zf Angle (°)</label>
-                        <input type="number" id="Zf_ang" value="0" step="0.1">
-                    </div>
-                </div>
-
-                <button onclick="calculate()" style="width:100%; margin-top:20px;">Calculate</button>
+        <div class="fault-types">
+            <div class="fault-type active" data-type="3ph">
+                <div class="fault-type-icon">⚡</div>
+                <div class="fault-type-label">3-Phase</div>
             </div>
+            <div class="fault-type" data-type="slg">
+                <div class="fault-type-icon">⏚</div>
+                <div class="fault-type-label">SLG</div>
+            </div>
+            <div class="fault-type" data-type="ll">
+                <div class="fault-type-icon">↔</div>
+                <div class="fault-type-label">L-L</div>
+            </div>
+            <div class="fault-type" data-type="llg">
+                <div class="fault-type-icon">⏚↔</div>
+                <div class="fault-type-label">L-L-G</div>
+            </div>
+        </div>
 
-            <div class="card">
-                <h2>Results</h2>
+        <div class="input-row">
+            <div class="input-group">
+                <label>Base MVA</label>
+                <input type="number" id="baseMVA" value="100">
+            </div>
+            <div class="input-group">
+                <label>Base kV (L-L)</label>
+                <input type="number" id="baseKV" value="138">
+            </div>
+        </div>
 
-                <div class="results-summary">
-                    <div class="result-card">
-                        <div class="label">Fault Current (3I₀)</div>
-                        <div class="value" id="If_pu">--</div>
-                        <div class="unit">p.u.</div>
-                    </div>
-                    <div class="result-card">
-                        <div class="label">Fault Current</div>
-                        <div class="value" id="If_A">--</div>
-                        <div class="unit">Amps</div>
-                    </div>
-                    <div class="result-card">
-                        <div class="label">Fault MVA</div>
-                        <div class="value" id="If_MVA">--</div>
-                        <div class="unit">MVA</div>
-                    </div>
+        <div class="input-row">
+            <div class="input-group">
+                <label>Z₁ (p.u.)</label>
+                <input type="text" id="Z1" value="0.1∠85" placeholder="mag∠angle">
+            </div>
+            <div class="input-group">
+                <label>Z₀ (p.u.)</label>
+                <input type="text" id="Z0" value="0.3∠80" placeholder="mag∠angle">
+            </div>
+        </div>
+
+        <div class="advanced-toggle" id="advancedToggle">+ More options</div>
+        <div class="advanced-inputs" id="advancedInputs">
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Z₂ (p.u.) — defaults to Z₁</label>
+                    <input type="text" id="Z2" value="" placeholder="same as Z₁">
                 </div>
-
-                <h3>Phase Currents</h3>
-                <div class="results" id="phaseResults" style="margin-top:12px;"></div>
-
-                <h3 style="margin-top:20px;">Sequence Network</h3>
-                <div class="sequence-diagram">
-                    <div class="seq-box pos">
-                        <div class="title">Positive Sequence</div>
-                        <div class="z-value" id="seq_Z1">Z₁ = --</div>
-                        <div class="i-value" id="seq_I1">I₁ = --</div>
-                    </div>
-                    <div class="seq-box neg">
-                        <div class="title">Negative Sequence</div>
-                        <div class="z-value" id="seq_Z2">Z₂ = --</div>
-                        <div class="i-value" id="seq_I2">I₂ = --</div>
-                    </div>
-                    <div class="seq-box zero">
-                        <div class="title">Zero Sequence</div>
-                        <div class="z-value" id="seq_Z0">Z₀ = --</div>
-                        <div class="i-value" id="seq_I0">I₀ = --</div>
-                    </div>
+                <div class="input-group">
+                    <label>Zf Fault Impedance (p.u.)</label>
+                    <input type="text" id="Zf" value="0∠0" placeholder="mag∠angle">
                 </div>
             </div>
         </div>
 
-        <details class="show-work">
-            <summary>Show Formulas</summary>
-            <div class="show-work-content" id="formulas"></div>
-        </details>
+        <div class="results-grid">
+            <div class="result-card">
+                <div class="result-card-value" id="If_pu">--</div>
+                <div class="result-card-label">p.u.</div>
+            </div>
+            <div class="result-card">
+                <div class="result-card-value" id="If_A">--</div>
+                <div class="result-card-label">Amps</div>
+            </div>
+            <div class="result-card">
+                <div class="result-card-value" id="If_MVA">--</div>
+                <div class="result-card-label">MVA</div>
+            </div>
+        </div>
+
+        <div class="phase-results" id="phaseResults"></div>
+
+        <div class="sequence-grid">
+            <div class="seq-card pos">
+                <div class="seq-label">Positive I₁</div>
+                <div class="seq-value" id="seq_I1">--</div>
+            </div>
+            <div class="seq-card neg">
+                <div class="seq-label">Negative I₂</div>
+                <div class="seq-value" id="seq_I2">--</div>
+            </div>
+            <div class="seq-card zero">
+                <div class="seq-label">Zero I₀</div>
+                <div class="seq-value" id="seq_I0">--</div>
+            </div>
+        </div>
+
+        <div class="drawer-trigger" id="stepToggle">See calculation →</div>
+        <div class="step-content" id="stepContent"></div>
     </div>
 
     <script>
-
-        function validateNumber(value, min, max, fieldName) {
-            const num = parseFloat(value);
-            if (isNaN(num)) {
-                return { valid: false, error: `${fieldName} must be a valid number` };
-            }
-            if (min !== null && num < min) {
-                return { valid: false, error: `${fieldName} must be >= ${min}` };
-            }
-            if (max !== null && num > max) {
-                return { valid: false, error: `${fieldName} must be <= ${max}` };
-            }
-            return { valid: true, value: num };
-        }
-
-        function validatePositive(value, fieldName) {
-            const result = validateNumber(value, 0.0001, null, fieldName);
-            if (!result.valid) return result;
-            if (result.value <= 0) {
-                return { valid: false, error: `${fieldName} must be positive` };
-            }
-            return result;
-        }
-
-        function validateNonNegative(value, fieldName) {
-            return validateNumber(value, 0, null, fieldName);
-        }
-
-        function showError(message) {
-            alert('Input Error: ' + message);
-        }
-
-        function formatEngineering(value, decimals = 4) {
-            if (Math.abs(value) === 0) return '0';
-            if (Math.abs(value) >= 1e6) return (value / 1e6).toFixed(decimals) + ' M';
-            if (Math.abs(value) >= 1e3) return (value / 1e3).toFixed(decimals) + ' k';
-            if (Math.abs(value) >= 1) return value.toFixed(decimals);
-            if (Math.abs(value) >= 1e-3) return (value * 1e3).toFixed(decimals) + ' m';
-            if (Math.abs(value) >= 1e-6) return (value * 1e6).toFixed(decimals) + ' μ';
-            return value.toExponential(decimals);
-        }
-
-        function formatAngle(degrees) {
-            return degrees.toFixed(2) + '°';
-        }
-
-        function formatComplex(re, im, decimals = 4) {
-            const sign = im >= 0 ? '+' : '-';
-            return `${re.toFixed(decimals)} ${sign} j${Math.abs(im).toFixed(decimals)}`;
-        }
-
-        function formatPolar(mag, angDeg, decimals = 4) {
-            return `${mag.toFixed(decimals)} ∠ ${angDeg.toFixed(2)}°`;
-        }
-    
         let faultType = '3ph';
-
         const a_re = -0.5, a_im = Math.sqrt(3)/2;
         const a2_re = -0.5, a2_im = -Math.sqrt(3)/2;
 
-        function setFaultType(type) {
-            faultType = type;
-            document.querySelectorAll('.fault-type-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('btn_' + type).classList.add('active');
-            calculate();
-        }
-
-        function polarToRect(mag, angDeg) {
-            const angRad = angDeg * Math.PI / 180;
-            return { re: mag * Math.cos(angRad), im: mag * Math.sin(angRad) };
+        // Parse polar notation: "0.1∠85" or "0.1<85" or "0.1 85"
+        function parsePolar(str) {
+            if (!str || str.trim() === '') return null;
+            str = str.trim().replace(/</g, '∠').replace(/\s+/g, '∠');
+            const match = str.match(/^([+-]?[\d.]+)∠([+-]?[\d.]+)$/);
+            if (match) {
+                const mag = parseFloat(match[1]);
+                const angDeg = parseFloat(match[2]);
+                const angRad = angDeg * Math.PI / 180;
+                return { re: mag * Math.cos(angRad), im: mag * Math.sin(angRad) };
+            }
+            // Try just a number
+            const num = parseFloat(str);
+            if (!isNaN(num)) return { re: num, im: 0 };
+            return null;
         }
 
         function rectToPolar(re, im) {
             return { mag: Math.sqrt(re*re + im*im), ang: Math.atan2(im, re) * 180 / Math.PI };
         }
 
+        function formatPolar(c) {
+            const p = rectToPolar(c.re, c.im);
+            return `${p.mag.toFixed(3)}∠${p.ang.toFixed(1)}°`;
+        }
+
         function complexAdd(a, b) { return { re: a.re + b.re, im: a.im + b.im }; }
-        function complexSub(a, b) { return { re: a.re - b.re, im: a.im - b.im }; }
         function complexMult(a, b) { return { re: a.re*b.re - a.im*b.im, im: a.re*b.im + a.im*b.re }; }
         function complexDiv(a, b) {
             const denom = b.re*b.re + b.im*b.im;
+            if (denom === 0) return { re: 0, im: 0 };
             return { re: (a.re*b.re + a.im*b.im)/denom, im: (a.im*b.re - a.re*b.im)/denom };
         }
 
-        function formatComplex(c) {
-            const sign = c.im >= 0 ? '+' : '-';
-            return `${c.re.toFixed(4)} ${sign} j${Math.abs(c.im).toFixed(4)}`;
-        }
-
-        function formatPolar(c) {
-            const p = rectToPolar(c.re, c.im);
-            return `${p.mag.toFixed(4)} ∠ ${p.ang.toFixed(2)}°`;
-        }
-
         function calculate() {
-            const baseMVA = parseFloat(document.getElementById('baseMVA').value);
-            const baseKV = parseFloat(document.getElementById('baseKV').value);
-            const baseI = baseMVA * 1000 / (Math.sqrt(3) * baseKV);  // Base current in Amps
+            const baseMVA = parseFloat(document.getElementById('baseMVA').value) || 100;
+            const baseKV = parseFloat(document.getElementById('baseKV').value) || 138;
+            const baseI = baseMVA * 1000 / (Math.sqrt(3) * baseKV);
 
-            const Z1 = polarToRect(parseFloat(document.getElementById('Z1_mag').value),
-                                   parseFloat(document.getElementById('Z1_ang').value));
-            const Z2 = polarToRect(parseFloat(document.getElementById('Z2_mag').value),
-                                   parseFloat(document.getElementById('Z2_ang').value));
-            const Z0 = polarToRect(parseFloat(document.getElementById('Z0_mag').value),
-                                   parseFloat(document.getElementById('Z0_ang').value));
-            const Zf = polarToRect(parseFloat(document.getElementById('Zf_mag').value),
-                                   parseFloat(document.getElementById('Zf_ang').value));
+            const Z1 = parsePolar(document.getElementById('Z1').value) || { re: 0.1, im: 0 };
+            const Z0 = parsePolar(document.getElementById('Z0').value) || { re: 0.3, im: 0 };
+            const Z2input = document.getElementById('Z2').value.trim();
+            const Z2 = Z2input ? parsePolar(Z2input) : Z1;
+            const Zf = parsePolar(document.getElementById('Zf').value) || { re: 0, im: 0 };
 
-            const Vf = { re: 1.0, im: 0 };  // Pre-fault voltage = 1.0 p.u.
-
+            const Vf = { re: 1.0, im: 0 };
             let I0 = { re: 0, im: 0 };
             let I1 = { re: 0, im: 0 };
             let I2 = { re: 0, im: 0 };
             let formula = '';
 
             if (faultType === '3ph') {
-                // 3-phase: I1 = Vf / (Z1 + Zf), I2 = 0, I0 = 0
                 const Ztotal = complexAdd(Z1, Zf);
                 I1 = complexDiv(Vf, Ztotal);
-                I2 = { re: 0, im: 0 };
-                I0 = { re: 0, im: 0 };
-
-                formula = `Three-Phase Fault:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Only positive sequence network is involved.
-
-I₁ = Vf / (Z₁ + Zf)
-I₁ = ${formatPolar(Vf)} / (${formatComplex(Z1)} + ${formatComplex(Zf)})
-I₁ = ${formatPolar(I1)} p.u.
-
-I₂ = 0
-I₀ = 0
-
-Phase currents (balanced):
-Ia = I₁ = ${formatPolar(I1)} p.u.
-Ib = a²·I₁ = ${formatPolar(I1)} ∠ -120° p.u.
-Ic = a·I₁ = ${formatPolar(I1)} ∠ +120° p.u.`;
+                formula = `Three-Phase Fault\nI₁ = Vf / (Z₁ + Zf) = ${formatPolar(I1)} p.u.\nI₂ = 0, I₀ = 0`;
 
             } else if (faultType === 'slg') {
-                // SLG (A-G): I0 = I1 = I2 = Vf / (Z0 + Z1 + Z2 + 3Zf)
                 const Zf3 = { re: 3*Zf.re, im: 3*Zf.im };
                 const Ztotal = complexAdd(complexAdd(complexAdd(Z0, Z1), Z2), Zf3);
                 const Iseq = complexDiv(Vf, Ztotal);
-                I0 = Iseq;
-                I1 = Iseq;
-                I2 = Iseq;
-
-                formula = `Single Line-to-Ground Fault (A-G):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-All three sequence networks in series.
-
-I₀ = I₁ = I₂ = Vf / (Z₀ + Z₁ + Z₂ + 3Zf)
-           = ${formatPolar(Vf)} / (${formatComplex(Z0)} + ${formatComplex(Z1)} + ${formatComplex(Z2)} + 3×${formatComplex(Zf)})
-           = ${formatPolar(I1)} p.u.
-
-Fault current:
-Ia = 3·I₀ = ${formatPolar({re: 3*I0.re, im: 3*I0.im})} p.u.
-Ib = 0
-Ic = 0`;
+                I0 = Iseq; I1 = Iseq; I2 = Iseq;
+                formula = `SLG Fault (A-G)\nI₀ = I₁ = I₂ = Vf / (Z₀ + Z₁ + Z₂ + 3Zf)\n= ${formatPolar(I1)} p.u.`;
 
             } else if (faultType === 'll') {
-                // L-L (B-C): I1 = -I2 = Vf / (Z1 + Z2 + Zf), I0 = 0
                 const Ztotal = complexAdd(complexAdd(Z1, Z2), Zf);
                 I1 = complexDiv(Vf, Ztotal);
                 I2 = { re: -I1.re, im: -I1.im };
-                I0 = { re: 0, im: 0 };
-
-                formula = `Line-to-Line Fault (B-C):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Positive and negative sequence networks in series.
-
-I₁ = Vf / (Z₁ + Z₂ + Zf)
-   = ${formatPolar(Vf)} / (${formatComplex(Z1)} + ${formatComplex(Z2)} + ${formatComplex(Zf)})
-   = ${formatPolar(I1)} p.u.
-
-I₂ = -I₁ = ${formatPolar(I2)} p.u.
-I₀ = 0
-
-Phase currents:
-Ia = I₁ + I₂ = 0
-Ib = a²·I₁ + a·I₂ = -j√3·I₁
-Ic = a·I₁ + a²·I₂ = +j√3·I₁`;
+                formula = `L-L Fault (B-C)\nI₁ = Vf / (Z₁ + Z₂ + Zf) = ${formatPolar(I1)} p.u.\nI₂ = -I₁, I₀ = 0`;
 
             } else if (faultType === 'llg') {
-                // L-L-G (B-C-G): More complex
-                // I1 = Vf / (Z1 + Z2||(Z0+3Zf))
                 const Z0_3Zf = complexAdd(Z0, { re: 3*Zf.re, im: 3*Zf.im });
-                // Z2 || (Z0+3Zf) = Z2 * (Z0+3Zf) / (Z2 + Z0 + 3Zf)
-                const Zparallel_num = complexMult(Z2, Z0_3Zf);
-                const Zparallel_den = complexAdd(Z2, Z0_3Zf);
-                const Zparallel = complexDiv(Zparallel_num, Zparallel_den);
-                const Ztotal = complexAdd(Z1, Zparallel);
+                const Zpar_num = complexMult(Z2, Z0_3Zf);
+                const Zpar_den = complexAdd(Z2, Z0_3Zf);
+                const Zpar = complexDiv(Zpar_num, Zpar_den);
+                const Ztotal = complexAdd(Z1, Zpar);
                 I1 = complexDiv(Vf, Ztotal);
-
-                // I2 = -I1 * (Z0+3Zf) / (Z2 + Z0 + 3Zf)
-                I2 = complexMult({ re: -I1.re, im: -I1.im }, complexDiv(Z0_3Zf, Zparallel_den));
-
-                // I0 = -I1 * Z2 / (Z2 + Z0 + 3Zf)
-                I0 = complexMult({ re: -I1.re, im: -I1.im }, complexDiv(Z2, Zparallel_den));
-
-                formula = `Double Line-to-Ground Fault (B-C-G):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Positive sequence in series with parallel combination of
-negative and zero sequence networks.
-
-Z_parallel = Z₂ || (Z₀ + 3Zf)
-           = ${formatComplex(Zparallel)}
-
-I₁ = Vf / (Z₁ + Z_parallel)
-   = ${formatPolar(I1)} p.u.
-
-I₂ = -I₁ × (Z₀ + 3Zf) / (Z₂ + Z₀ + 3Zf)
-   = ${formatPolar(I2)} p.u.
-
-I₀ = -I₁ × Z₂ / (Z₂ + Z₀ + 3Zf)
-   = ${formatPolar(I0)} p.u.`;
+                I2 = complexMult({ re: -I1.re, im: -I1.im }, complexDiv(Z0_3Zf, Zpar_den));
+                I0 = complexMult({ re: -I1.re, im: -I1.im }, complexDiv(Z2, Zpar_den));
+                formula = `L-L-G Fault (B-C-G)\nI₁ = Vf / (Z₁ + Z₂||(Z₀+3Zf)) = ${formatPolar(I1)} p.u.`;
             }
 
-            // Calculate phase currents: Ia = I0+I1+I2, Ib = I0+a²I1+aI2, Ic = I0+aI1+a²I2
+            // Phase currents
             const a = { re: a_re, im: a_im };
             const a2 = { re: a2_re, im: a2_im };
-
             const Ia = complexAdd(complexAdd(I0, I1), I2);
             const Ib = complexAdd(complexAdd(I0, complexMult(a2, I1)), complexMult(a, I2));
             const Ic = complexAdd(complexAdd(I0, complexMult(a, I1)), complexMult(a2, I2));
 
-            // Determine fault current magnitude
             let If_mag;
             if (faultType === '3ph') {
                 If_mag = rectToPolar(I1.re, I1.im).mag;
@@ -850,27 +346,55 @@ I₀ = -I₁ × Z₂ / (Z₂ + Z₀ + 3Zf)
             const If_amps = If_mag * baseI;
             const If_MVA = Math.sqrt(3) * baseKV * If_amps / 1000;
 
-            // Update results
-            document.getElementById('If_pu').textContent = If_mag.toFixed(4);
-            document.getElementById('If_A').textContent = If_amps.toFixed(1);
-            document.getElementById('If_MVA').textContent = If_MVA.toFixed(1);
+            // Update display
+            document.getElementById('If_pu').textContent = If_mag.toFixed(2);
+            document.getElementById('If_A').textContent = If_amps.toFixed(0);
+            document.getElementById('If_MVA').textContent = If_MVA.toFixed(0);
 
-            // Phase results
-            let phaseHTML = `<span style="color:#ef4444">Ia = ${formatPolar(Ia)} p.u. = ${(rectToPolar(Ia.re, Ia.im).mag * baseI).toFixed(1)} A</span>\n`;
-            phaseHTML += `<span style="color:#22c55e">Ib = ${formatPolar(Ib)} p.u. = ${(rectToPolar(Ib.re, Ib.im).mag * baseI).toFixed(1)} A</span>\n`;
-            phaseHTML += `<span style="color:#3b82f6">Ic = ${formatPolar(Ic)} p.u. = ${(rectToPolar(Ic.re, Ic.im).mag * baseI).toFixed(1)} A</span>`;
-            document.getElementById('phaseResults').innerHTML = phaseHTML;
+            const IaMag = rectToPolar(Ia.re, Ia.im).mag;
+            const IbMag = rectToPolar(Ib.re, Ib.im).mag;
+            const IcMag = rectToPolar(Ic.re, Ic.im).mag;
 
-            // Sequence results
-            document.getElementById('seq_Z1').textContent = `Z₁ = ${formatComplex(Z1)}`;
-            document.getElementById('seq_Z2').textContent = `Z₂ = ${formatComplex(Z2)}`;
-            document.getElementById('seq_Z0').textContent = `Z₀ = ${formatComplex(Z0)}`;
-            document.getElementById('seq_I1').textContent = `I₁ = ${formatPolar(I1)}`;
-            document.getElementById('seq_I2').textContent = `I₂ = ${formatPolar(I2)}`;
-            document.getElementById('seq_I0').textContent = `I₀ = ${formatPolar(I0)}`;
+            document.getElementById('phaseResults').innerHTML =
+                `<span class="phase-a">Ia = ${formatPolar(Ia)} = ${(IaMag * baseI).toFixed(0)} A</span><br>` +
+                `<span class="phase-b">Ib = ${formatPolar(Ib)} = ${(IbMag * baseI).toFixed(0)} A</span><br>` +
+                `<span class="phase-c">Ic = ${formatPolar(Ic)} = ${(IcMag * baseI).toFixed(0)} A</span>`;
 
-            document.getElementById('formulas').textContent = formula;
+            document.getElementById('seq_I1').textContent = formatPolar(I1);
+            document.getElementById('seq_I2').textContent = formatPolar(I2);
+            document.getElementById('seq_I0').textContent = formatPolar(I0);
+
+            document.getElementById('stepContent').innerHTML =
+                `<div class="step-section"><div class="step-title">Calculation</div><pre>${formula}</pre></div>`;
         }
+
+        // Fault type selection
+        document.querySelectorAll('.fault-type').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.fault-type').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                faultType = btn.dataset.type;
+                calculate();
+            });
+        });
+
+        // Advanced toggle
+        document.getElementById('advancedToggle').addEventListener('click', () => {
+            const inputs = document.getElementById('advancedInputs');
+            const toggle = document.getElementById('advancedToggle');
+            inputs.classList.toggle('open');
+            toggle.textContent = inputs.classList.contains('open') ? '− Less options' : '+ More options';
+        });
+
+        // Step toggle
+        document.getElementById('stepToggle').addEventListener('click', () => {
+            document.getElementById('stepContent').classList.toggle('open');
+        });
+
+        // Auto-calculate on input
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', calculate);
+        });
 
         // Initial calculation
         calculate();

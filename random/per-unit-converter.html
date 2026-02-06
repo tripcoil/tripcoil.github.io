@@ -3,798 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Per-Unit System Converter</title>
+    <title>Per-Unit Converter</title>
+    <link rel="stylesheet" href="tokens.css">
     <style>
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        .section {
+            margin-bottom: var(--space-xl);
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        h1, h2, h3, h4 {
-            color: #e2e8f0;
-            margin-bottom: 16px;
-        }
-
-        h1 {
-            font-size: 1.75rem;
-            font-weight: 600;
-            border-bottom: 2px solid #3b82f6;
-            padding-bottom: 12px;
-            margin-bottom: 24px;
-        }
-
-        h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #3b82f6;
-        }
-
-        h3 {
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        .card {
-            background: #1e293b;
-            border: 1px solid #475569;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .grid {
-            display: grid;
-            gap: 20px;
-        }
-
-        .grid-2 {
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        }
-
-        .grid-3 {
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        }
-
-        label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #94a3b8;
-            margin-bottom: 4px;
-        }
-
-        input[type="number"],
-        input[type="text"],
-        select {
-            width: 100%;
-            padding: 8px 12px;
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            color: #e2e8f0;
-            font-size: 0.875rem;
-            font-family: 'Consolas', 'Monaco', monospace;
-        }
-
-        input[type="number"]:focus,
-        input[type="text"]:focus,
-        select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-
-        input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: #3b82f6;
-        }
-
-        button {
-            padding: 10px 20px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        button:hover {
-            background: #2563eb;
-        }
-
-        button.secondary {
-            background: #334155;
-            border: 1px solid #475569;
-        }
-
-        button.secondary:hover {
-            background: #475569;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .input-group {
-            margin-bottom: 16px;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 16px;
-            align-items: end;
-            margin-bottom: 16px;
-        }
-
-        .input-row .input-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
-        .unit {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-left: 4px;
-        }
-
-        .results {
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            padding: 16px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.875rem;
-            white-space: pre-wrap;
-            overflow-x: auto;
-        }
-
-        .results .value {
-            color: #3b82f6;
-            font-weight: 600;
-        }
-
-        .results .success {
-            color: #10b981;
-        }
-
-        .results .warning {
-            color: #f59e0b;
-        }
-
-        .results .error {
-            color: #ef4444;
-        }
-
-        .show-work {
-            margin-top: 16px;
-        }
-
-        .show-work summary {
-            cursor: pointer;
-            color: #3b82f6;
-            font-size: 0.875rem;
-            padding: 8px 0;
-        }
-
-        .show-work summary:hover {
-            text-decoration: underline;
-        }
-
-        .show-work-content {
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            padding: 16px;
-            margin-top: 8px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.8rem;
-            white-space: pre-wrap;
-        }
-
-        canvas {
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            display: block;
-            max-width: 100%;
-        }
-
-        .canvas-container {
-            position: relative;
-        }
-
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-top: 12px;
-            font-size: 0.8rem;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .legend-color {
-            width: 16px;
-            height: 3px;
-            border-radius: 1px;
-        }
-
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .status-ok {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            border: 1px solid #10b981;
-        }
-
-        .status-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
-            border: 1px solid #f59e0b;
-        }
-
-        .status-error {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            border: 1px solid #ef4444;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: #94a3b8;
-            text-decoration: none;
-            font-size: 0.875rem;
-            margin-bottom: 16px;
-        }
-
-        .back-link:hover {
-            color: #3b82f6;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
-        }
-
-        th, td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid #475569;
-        }
-
-        th {
-            background: #0f172a;
-            color: #94a3b8;
-            font-weight: 500;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        tr:hover td {
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        /* Print styles */
-        @media print {
-            body {
-                background: white;
-                color: black;
-            }
-            .card {
-                background: white;
-                border: 1px solid #ccc;
-            }
-            .results, .show-work-content {
-                background: #f5f5f5;
-                border: 1px solid #ccc;
-            }
-            canvas {
-                background: white;
-                border: 1px solid #ccc;
-            }
-            button, .back-link {
-                display: none;
-            }
-        }
-
-        /* Mobile responsive */
-        @media (max-width: 768px) {
-            .container {
-                padding: 12px;
-            }
-            h1 {
-                font-size: 1.5rem;
-            }
-            .input-row {
-                flex-direction: column;
-                gap: 12px;
-            }
-            .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
-            }
-        }
-    
-        .calc-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
         .section-title {
             font-size: 0.875rem;
-            font-weight: 600;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 16px 0 12px 0;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #475569;
-        }
-        .section-title:first-child {
-            margin-top: 0;
-        }
-        .input-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .result-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-        .result-item {
-            background: #0f172a;
-            padding: 16px;
-            border-radius: 4px;
-        }
-        .result-item .label {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-bottom: 4px;
-        }
-        .result-item .value {
-            font-size: 1.1rem;
-            font-weight: 600;
-            font-family: 'Consolas', monospace;
-            color: #3b82f6;
-        }
-        .result-item .unit {
-            font-size: 0.75rem;
-            color: #94a3b8;
-            margin-left: 4px;
-        }
-        .mode-tabs {
-            display: flex;
-            gap: 0;
-            margin-bottom: 20px;
-        }
-        .mode-tab {
-            flex: 1;
-            padding: 12px;
-            background: #0f172a;
-            border: 1px solid #475569;
-            color: #94a3b8;
-            cursor: pointer;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-lg);
             text-align: center;
-            transition: all 0.2s;
         }
-        .mode-tab:first-child { border-radius: 4px 0 0 4px; }
-        .mode-tab:last-child { border-radius: 0 4px 4px 0; }
-        .mode-tab.active {
-            background: #3b82f6;
-            border-color: #3b82f6;
-            color: white;
+
+        .base-inputs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-md);
+            padding: var(--space-lg);
+            background: var(--bg-subtle);
+            border-radius: var(--radius-md);
         }
-        @media (max-width: 768px) {
-            .calc-grid {
+
+        .conversion-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: var(--space-md);
+            align-items: end;
+        }
+
+        .arrow {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            padding-bottom: var(--space-md);
+        }
+
+        .result-display {
+            text-align: center;
+            padding: var(--space-xl);
+            background: var(--bg-subtle);
+            border-radius: var(--radius-md);
+        }
+
+        .result-number {
+            font-size: 2.5rem;
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+
+        .result-unit {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: var(--space-sm);
+        }
+
+        .mode-toggle {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-xl);
+        }
+
+        .mode-btn {
+            padding: var(--space-sm) var(--space-lg);
+            background: transparent;
+            border: 1px solid var(--bg-hover);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .mode-btn:hover {
+            border-color: var(--text-secondary);
+        }
+
+        .mode-btn.active {
+            background: var(--bg-hover);
+            border-color: var(--text);
+            color: var(--text);
+        }
+
+        .formulas {
+            margin-top: var(--space-xl);
+            padding: var(--space-lg);
+            background: var(--bg-subtle);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 2;
+        }
+
+        .formulas h4 {
+            color: var(--text);
+            font-size: 0.875rem;
+            margin-bottom: var(--space-md);
+        }
+
+        .formula-line {
+            font-family: var(--font-mono);
+        }
+
+        @media (max-width: 600px) {
+            .base-inputs {
                 grid-template-columns: 1fr;
+            }
+
+            .conversion-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .arrow {
+                text-align: center;
+                padding: var(--space-sm) 0;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="back-link">← Back to Tools</a>
-        <h1>Per-Unit System Converter</h1>
+        <header class="header">
+            <a href="/random/" class="header-back">← Relay Tools</a>
+            <span class="header-title">Per-Unit</span>
+        </header>
 
-        <div class="mode-tabs">
-            <div class="mode-tab active" onclick="setMode('actual')">Actual → Per-Unit</div>
-            <div class="mode-tab" onclick="setMode('pu')">Per-Unit → Actual</div>
-            <div class="mode-tab" onclick="setMode('rebase')">Change Base</div>
+        <h1>Per-Unit Converter</h1>
+        <p class="tagline">Convert between actual and per-unit values</p>
+
+        <div class="mode-toggle">
+            <button class="mode-btn active" data-mode="actual-to-pu">Actual → Per-Unit</button>
+            <button class="mode-btn" data-mode="pu-to-actual">Per-Unit → Actual</button>
         </div>
 
-        <div class="calc-grid">
-            <div class="card">
-                <div class="section-title">Base Values (3-Phase System)</div>
-                <div class="input-grid">
-                    <div class="input-group">
-                        <label>Base MVA (S_base)</label>
-                        <input type="number" id="baseMVA" value="100" step="1">
-                    </div>
-                    <div class="input-group">
-                        <label>Base kV (V_base, L-L)</label>
-                        <input type="number" id="baseKV" value="138" step="0.1">
-                    </div>
+        <div class="section">
+            <div class="section-title">Base Values</div>
+            <div class="base-inputs">
+                <div class="input-group">
+                    <label>Base MVA</label>
+                    <input type="number" id="baseMVA" value="100">
                 </div>
-
-                <div id="actualInputs">
-                    <div class="section-title">Actual Values</div>
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label>Voltage (kV, L-L)</label>
-                            <input type="number" id="actualV" value="138" step="0.1">
-                        </div>
-                        <div class="input-group">
-                            <label>Current (A)</label>
-                            <input type="number" id="actualI" value="418.4" step="0.1">
-                        </div>
-                        <div class="input-group">
-                            <label>Impedance (Ω)</label>
-                            <input type="number" id="actualZ" value="19.04" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>Power (MVA)</label>
-                            <input type="number" id="actualS" value="100" step="0.1">
-                        </div>
-                    </div>
+                <div class="input-group">
+                    <label>Base kV (L-L)</label>
+                    <input type="number" id="baseKV" value="138">
                 </div>
-
-                <div id="puInputs" style="display:none;">
-                    <div class="section-title">Per-Unit Values</div>
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label>Voltage (p.u.)</label>
-                            <input type="number" id="puV" value="1.0" step="0.001">
-                        </div>
-                        <div class="input-group">
-                            <label>Current (p.u.)</label>
-                            <input type="number" id="puI" value="1.0" step="0.001">
-                        </div>
-                        <div class="input-group">
-                            <label>Impedance (p.u.)</label>
-                            <input type="number" id="puZ" value="0.1" step="0.001">
-                        </div>
-                        <div class="input-group">
-                            <label>Power (p.u.)</label>
-                            <input type="number" id="puS" value="1.0" step="0.001">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="rebaseInputs" style="display:none;">
-                    <div class="section-title">New Base Values</div>
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label>New Base MVA</label>
-                            <input type="number" id="newBaseMVA" value="100" step="1">
-                        </div>
-                        <div class="input-group">
-                            <label>New Base kV</label>
-                            <input type="number" id="newBaseKV" value="138" step="0.1">
-                        </div>
-                    </div>
-                    <div class="section-title">Old Per-Unit Value</div>
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label>Z (p.u.) on old base</label>
-                            <input type="number" id="oldPuZ" value="0.1" step="0.001">
-                        </div>
-                        <div class="input-group">
-                            <label>Old Base MVA</label>
-                            <input type="number" id="oldBaseMVA" value="100" step="1">
-                        </div>
-                        <div class="input-group">
-                            <label>Old Base kV</label>
-                            <input type="number" id="oldBaseKV" value="138" step="0.1">
-                        </div>
-                    </div>
-                </div>
-
-                <button onclick="calculate()" style="width:100%; margin-top:20px;">Calculate</button>
-            </div>
-
-            <div class="card">
-                <h2>Results</h2>
-
-                <div class="section-title">Derived Base Values</div>
-                <div class="result-grid">
-                    <div class="result-item">
-                        <div class="label">Base Current (I_base)</div>
-                        <div class="value" id="r_baseI">--<span class="unit">A</span></div>
-                    </div>
-                    <div class="result-item">
-                        <div class="label">Base Impedance (Z_base)</div>
-                        <div class="value" id="r_baseZ">--<span class="unit">Ω</span></div>
-                    </div>
-                </div>
-
-                <div class="section-title" id="resultsTitle">Per-Unit Values</div>
-                <div class="result-grid" id="resultsGrid">
-                    <div class="result-item">
-                        <div class="label">Voltage</div>
-                        <div class="value" id="r_V">--<span class="unit">p.u.</span></div>
-                    </div>
-                    <div class="result-item">
-                        <div class="label">Current</div>
-                        <div class="value" id="r_I">--<span class="unit">p.u.</span></div>
-                    </div>
-                    <div class="result-item">
-                        <div class="label">Impedance</div>
-                        <div class="value" id="r_Z">--<span class="unit">p.u.</span></div>
-                    </div>
-                    <div class="result-item">
-                        <div class="label">Power</div>
-                        <div class="value" id="r_S">--<span class="unit">p.u.</span></div>
-                    </div>
+                <div class="input-group">
+                    <label>Base Z (Ω)</label>
+                    <input type="number" id="baseZ" value="" readonly style="color: var(--text-secondary)">
                 </div>
             </div>
         </div>
 
-        <details class="show-work">
-            <summary>Show Formulas</summary>
-            <div class="show-work-content" id="formulas">
-Per-Unit System (3-Phase):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Base Quantities:
-  S_base = Base apparent power (MVA)
-  V_base = Base line-to-line voltage (kV)
-
-Derived Base Values:
-  I_base = S_base / (√3 × V_base) × 1000  [Amps]
-  Z_base = V_base² / S_base × 1000        [Ohms]
-
-Conversion to Per-Unit:
-  V_pu = V_actual / V_base
-  I_pu = I_actual / I_base
-  Z_pu = Z_actual / Z_base
-  S_pu = S_actual / S_base
-
-Changing Base:
-  Z_new = Z_old × (S_new/S_old) × (V_old/V_new)²
-
-Note: Per-unit values are identical on either side
-of an ideal transformer (the great advantage of p.u.)
+        <div class="section" id="conversionSection">
+            <div class="conversion-grid">
+                <div class="input-group">
+                    <label id="inputLabel">Impedance (Ω)</label>
+                    <input type="number" id="inputValue" value="10">
+                </div>
+                <div class="arrow">→</div>
+                <div class="input-group">
+                    <label id="outputLabel">Impedance (p.u.)</label>
+                    <input type="number" id="outputValue" value="" readonly style="color: var(--text-secondary)">
+                </div>
             </div>
-        </details>
+        </div>
+
+        <div class="result-display">
+            <div class="result-number" id="resultValue">--</div>
+            <div class="result-unit" id="resultUnit">p.u.</div>
+        </div>
+
+        <div class="formulas">
+            <h4>Reference Formulas</h4>
+            <div class="formula-line">Z_base = kV² / MVA = <span id="formulaZbase">--</span> Ω</div>
+            <div class="formula-line">I_base = MVA / (√3 × kV) = <span id="formulaIbase">--</span> A</div>
+            <div class="formula-line">Z_pu = Z_actual / Z_base</div>
+            <div class="formula-line">Z_actual = Z_pu × Z_base</div>
+        </div>
     </div>
 
     <script>
-
-        function validateNumber(value, min, max, fieldName) {
-            const num = parseFloat(value);
-            if (isNaN(num)) {
-                return { valid: false, error: `${fieldName} must be a valid number` };
-            }
-            if (min !== null && num < min) {
-                return { valid: false, error: `${fieldName} must be >= ${min}` };
-            }
-            if (max !== null && num > max) {
-                return { valid: false, error: `${fieldName} must be <= ${max}` };
-            }
-            return { valid: true, value: num };
-        }
-
-        function validatePositive(value, fieldName) {
-            const result = validateNumber(value, 0.0001, null, fieldName);
-            if (!result.valid) return result;
-            if (result.value <= 0) {
-                return { valid: false, error: `${fieldName} must be positive` };
-            }
-            return result;
-        }
-
-        function validateNonNegative(value, fieldName) {
-            return validateNumber(value, 0, null, fieldName);
-        }
-
-        function showError(message) {
-            alert('Input Error: ' + message);
-        }
-
-        function formatEngineering(value, decimals = 4) {
-            if (Math.abs(value) === 0) return '0';
-            if (Math.abs(value) >= 1e6) return (value / 1e6).toFixed(decimals) + ' M';
-            if (Math.abs(value) >= 1e3) return (value / 1e3).toFixed(decimals) + ' k';
-            if (Math.abs(value) >= 1) return value.toFixed(decimals);
-            if (Math.abs(value) >= 1e-3) return (value * 1e3).toFixed(decimals) + ' m';
-            if (Math.abs(value) >= 1e-6) return (value * 1e6).toFixed(decimals) + ' μ';
-            return value.toExponential(decimals);
-        }
-
-        function formatAngle(degrees) {
-            return degrees.toFixed(2) + '°';
-        }
-
-        function formatComplex(re, im, decimals = 4) {
-            const sign = im >= 0 ? '+' : '-';
-            return `${re.toFixed(decimals)} ${sign} j${Math.abs(im).toFixed(decimals)}`;
-        }
-
-        function formatPolar(mag, angDeg, decimals = 4) {
-            return `${mag.toFixed(decimals)} ∠ ${angDeg.toFixed(2)}°`;
-        }
-    
-        let mode = 'actual';
-
-        function setMode(newMode) {
-            mode = newMode;
-            document.querySelectorAll('.mode-tab').forEach((tab, i) => {
-                const modes = ['actual', 'pu', 'rebase'];
-                tab.classList.toggle('active', modes[i] === mode);
-            });
-
-            document.getElementById('actualInputs').style.display = mode === 'actual' ? 'block' : 'none';
-            document.getElementById('puInputs').style.display = mode === 'pu' ? 'block' : 'none';
-            document.getElementById('rebaseInputs').style.display = mode === 'rebase' ? 'block' : 'none';
-
-            if (mode === 'actual') {
-                document.getElementById('resultsTitle').textContent = 'Per-Unit Values';
-            } else if (mode === 'pu') {
-                document.getElementById('resultsTitle').textContent = 'Actual Values';
-            } else {
-                document.getElementById('resultsTitle').textContent = 'Rebased Values';
-            }
-
-            calculate();
-        }
+        let mode = 'actual-to-pu';
 
         function calculate() {
-            const baseMVA = parseFloat(document.getElementById('baseMVA').value);
-            const baseKV = parseFloat(document.getElementById('baseKV').value);
+            const baseMVA = parseFloat(document.getElementById('baseMVA').value) || 100;
+            const baseKV = parseFloat(document.getElementById('baseKV').value) || 138;
+            const inputVal = parseFloat(document.getElementById('inputValue').value) || 0;
 
-            // Calculate base values
-            const baseI = baseMVA * 1000 / (Math.sqrt(3) * baseKV);  // Amps
-            const baseZ = baseKV * baseKV / baseMVA * 1000;          // Ohms (kV²/MVA × 1000)
+            const baseZ = (baseKV * baseKV) / baseMVA;
+            const baseI = (baseMVA * 1000) / (Math.sqrt(3) * baseKV);
 
-            document.getElementById('r_baseI').innerHTML = baseI.toFixed(2) + '<span class="unit">A</span>';
-            document.getElementById('r_baseZ').innerHTML = baseZ.toFixed(4) + '<span class="unit">Ω</span>';
+            document.getElementById('baseZ').value = baseZ.toFixed(4);
+            document.getElementById('formulaZbase').textContent = baseZ.toFixed(4);
+            document.getElementById('formulaIbase').textContent = baseI.toFixed(2);
 
-            let formulas = `Base Calculations:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-S_base = ${baseMVA} MVA
-V_base = ${baseKV} kV
-
-I_base = S_base / (√3 × V_base) × 1000
-       = ${baseMVA} / (√3 × ${baseKV}) × 1000
-       = ${baseI.toFixed(4)} A
-
-Z_base = V_base² / S_base × 1000
-       = ${baseKV}² / ${baseMVA} × 1000
-       = ${baseZ.toFixed(4)} Ω
-`;
-
-            if (mode === 'actual') {
-                const actualV = parseFloat(document.getElementById('actualV').value);
-                const actualI = parseFloat(document.getElementById('actualI').value);
-                const actualZ = parseFloat(document.getElementById('actualZ').value);
-                const actualS = parseFloat(document.getElementById('actualS').value);
-
-                const puV = actualV / baseKV;
-                const puI = actualI / baseI;
-                const puZ = actualZ / baseZ;
-                const puS = actualS / baseMVA;
-
-                document.getElementById('r_V').innerHTML = puV.toFixed(6) + '<span class="unit">p.u.</span>';
-                document.getElementById('r_I').innerHTML = puI.toFixed(6) + '<span class="unit">p.u.</span>';
-                document.getElementById('r_Z').innerHTML = puZ.toFixed(6) + '<span class="unit">p.u.</span>';
-                document.getElementById('r_S').innerHTML = puS.toFixed(6) + '<span class="unit">p.u.</span>';
-
-                formulas += `
-Actual to Per-Unit Conversion:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-V_pu = ${actualV} kV / ${baseKV} kV = ${puV.toFixed(6)} p.u.
-I_pu = ${actualI} A / ${baseI.toFixed(4)} A = ${puI.toFixed(6)} p.u.
-Z_pu = ${actualZ} Ω / ${baseZ.toFixed(4)} Ω = ${puZ.toFixed(6)} p.u.
-S_pu = ${actualS} MVA / ${baseMVA} MVA = ${puS.toFixed(6)} p.u.`;
-
-            } else if (mode === 'pu') {
-                const puV = parseFloat(document.getElementById('puV').value);
-                const puI = parseFloat(document.getElementById('puI').value);
-                const puZ = parseFloat(document.getElementById('puZ').value);
-                const puS = parseFloat(document.getElementById('puS').value);
-
-                const actualV = puV * baseKV;
-                const actualI = puI * baseI;
-                const actualZ = puZ * baseZ;
-                const actualS = puS * baseMVA;
-
-                document.getElementById('r_V').innerHTML = actualV.toFixed(4) + '<span class="unit">kV</span>';
-                document.getElementById('r_I').innerHTML = actualI.toFixed(2) + '<span class="unit">A</span>';
-                document.getElementById('r_Z').innerHTML = actualZ.toFixed(4) + '<span class="unit">Ω</span>';
-                document.getElementById('r_S').innerHTML = actualS.toFixed(4) + '<span class="unit">MVA</span>';
-
-                formulas += `
-Per-Unit to Actual Conversion:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-V_actual = ${puV} × ${baseKV} kV = ${actualV.toFixed(4)} kV
-I_actual = ${puI} × ${baseI.toFixed(4)} A = ${actualI.toFixed(2)} A
-Z_actual = ${puZ} × ${baseZ.toFixed(4)} Ω = ${actualZ.toFixed(4)} Ω
-S_actual = ${puS} × ${baseMVA} MVA = ${actualS.toFixed(4)} MVA`;
-
+            let result;
+            if (mode === 'actual-to-pu') {
+                result = inputVal / baseZ;
+                document.getElementById('resultUnit').textContent = 'p.u.';
             } else {
-                // Rebase mode
-                const oldPuZ = parseFloat(document.getElementById('oldPuZ').value);
-                const oldBaseMVA = parseFloat(document.getElementById('oldBaseMVA').value);
-                const oldBaseKV = parseFloat(document.getElementById('oldBaseKV').value);
-                const newBaseMVA = parseFloat(document.getElementById('newBaseMVA').value);
-                const newBaseKV = parseFloat(document.getElementById('newBaseKV').value);
-
-                // Z_new = Z_old × (S_new/S_old) × (V_old/V_new)²
-                const newPuZ = oldPuZ * (newBaseMVA / oldBaseMVA) * Math.pow(oldBaseKV / newBaseKV, 2);
-
-                // Also calculate actual impedance for reference
-                const oldBaseZ = oldBaseKV * oldBaseKV / oldBaseMVA * 1000;
-                const actualZ = oldPuZ * oldBaseZ;
-                const newBaseZ = newBaseKV * newBaseKV / newBaseMVA * 1000;
-                const newBaseI = newBaseMVA * 1000 / (Math.sqrt(3) * newBaseKV);
-
-                document.getElementById('r_V').innerHTML = '--';
-                document.getElementById('r_I').innerHTML = '--';
-                document.getElementById('r_Z').innerHTML = newPuZ.toFixed(6) + '<span class="unit">p.u.</span>';
-                document.getElementById('r_S').innerHTML = '--';
-
-                formulas += `
-Base Change Calculation:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Old base: ${oldBaseMVA} MVA, ${oldBaseKV} kV
-New base: ${newBaseMVA} MVA, ${newBaseKV} kV
-
-Formula:
-Z_new = Z_old × (S_new/S_old) × (V_old/V_new)²
-
-Calculation:
-Z_new = ${oldPuZ} × (${newBaseMVA}/${oldBaseMVA}) × (${oldBaseKV}/${newBaseKV})²
-Z_new = ${oldPuZ} × ${(newBaseMVA/oldBaseMVA).toFixed(4)} × ${Math.pow(oldBaseKV/newBaseKV, 2).toFixed(4)}
-Z_new = ${newPuZ.toFixed(6)} p.u.
-
-Verification (actual impedance):
-Z_actual = ${oldPuZ} p.u. × ${oldBaseZ.toFixed(4)} Ω = ${actualZ.toFixed(4)} Ω
-Z_new check = ${actualZ.toFixed(4)} Ω / ${newBaseZ.toFixed(4)} Ω = ${(actualZ/newBaseZ).toFixed(6)} p.u. ✓`;
+                result = inputVal * baseZ;
+                document.getElementById('resultUnit').textContent = 'Ω';
             }
 
-            document.getElementById('formulas').textContent = formulas;
+            document.getElementById('resultValue').textContent = result.toFixed(6);
+            document.getElementById('outputValue').value = result.toFixed(6);
         }
 
-        // Initial calculation
+        function updateLabels() {
+            if (mode === 'actual-to-pu') {
+                document.getElementById('inputLabel').textContent = 'Impedance (Ω)';
+                document.getElementById('outputLabel').textContent = 'Impedance (p.u.)';
+            } else {
+                document.getElementById('inputLabel').textContent = 'Impedance (p.u.)';
+                document.getElementById('outputLabel').textContent = 'Impedance (Ω)';
+            }
+        }
+
+        // Mode toggle
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                mode = btn.dataset.mode;
+                updateLabels();
+                calculate();
+            });
+        });
+
+        // Auto-calculate
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+
+        // Initial
+        updateLabels();
         calculate();
     </script>
 </body>
