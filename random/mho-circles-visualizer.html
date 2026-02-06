@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mho Distance Relay Visualizer</title>
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2, h3, h4 {
+            color: #e2e8f0;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        h3 {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button.secondary {
+            background: #334155;
+            border: 1px solid #475569;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .unit {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-left: 4px;
+        }
+
+        .results {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .results .value {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .results .success {
+            color: #10b981;
+        }
+
+        .results .warning {
+            color: #f59e0b;
+        }
+
+        .results .error {
+            color: #ef4444;
+        }
+
+        .show-work {
+            margin-top: 16px;
+        }
+
+        .show-work summary {
+            cursor: pointer;
+            color: #3b82f6;
+            font-size: 0.875rem;
+            padding: 8px 0;
+        }
+
+        .show-work summary:hover {
+            text-decoration: underline;
+        }
+
+        .show-work-content {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+        }
+
+        canvas {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            display: block;
+            max-width: 100%;
+        }
+
+        .canvas-container {
+            position: relative;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 1px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+
+        .back-link:hover {
+            color: #3b82f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #475569;
+        }
+
+        th {
+            background: #0f172a;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .card {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            .results, .show-work-content {
+                background: #f5f5f5;
+                border: 1px solid #ccc;
+            }
+            canvas {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            button, .back-link {
+                display: none;
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .input-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+        .controls-panel {
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 20px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #475569;
+        }
+        .section-title:first-child {
+            margin-top: 0;
+        }
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+        }
+        .checkbox-item input {
+            margin: 0;
+        }
+        .zone-phase { color: #3b82f6; }
+        .zone-ground { color: #22c55e; }
+        .computed-k0 {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 12px 0;
+            font-family: 'Consolas', monospace;
+            font-size: 0.875rem;
+        }
+        .plot-container {
+            position: relative;
+        }
+        #canvas {
+            cursor: grab;
+            width: 100%;
+            max-width: 700px;
+        }
+        #canvas:active {
+            cursor: grabbing;
+        }
+        .trip-status {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+        }
+        .trip-status.trip {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+        .trip-status.no-trip {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+        @media (max-width: 1000px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            .controls-panel {
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Tools</a>
+        <h1>Mho Distance Relay Visualizer</h1>
+
+        <div class="main-layout">
+            <div class="controls-panel card">
+                <div class="section-title">Line Parameters</div>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Z1 Magnitude (Ω)</label>
+                        <input type="number" id="z1mag" value="10" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label>Z1 Angle (°)</label>
+                        <input type="number" id="lineAngle" value="85">
+                    </div>
+                    <div class="input-group">
+                        <label>Z0 Magnitude (Ω)</label>
+                        <input type="number" id="z0mag" value="30" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label>Z0 Angle (°)</label>
+                        <input type="number" id="z0ang" value="80">
+                    </div>
+                </div>
+
+                <div class="computed-k0" id="computedK0">
+                    Computed k₀: --
+                </div>
+
+                <div class="section-title">Relay k₀ Settings</div>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>k₀ Magnitude</label>
+                        <input type="number" id="k0m" value="0.667" step="0.001">
+                    </div>
+                    <div class="input-group">
+                        <label>k₀ Angle (°)</label>
+                        <input type="number" id="k0a" value="-5.4">
+                    </div>
+                </div>
+                <button class="secondary" onclick="copyK0()" style="width:100%; margin-top:12px;">Copy Computed k₀ to Settings</button>
+
+                <div class="section-title">Phase Mho Reaches (Ω)</div>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Zone 1</label>
+                        <input type="number" id="z1p" value="5">
+                    </div>
+                    <div class="input-group">
+                        <label>Zone 2</label>
+                        <input type="number" id="z2p" value="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Zone 3</label>
+                        <input type="number" id="z3p" value="15">
+                    </div>
+                    <div class="input-group">
+                        <label>Zone 4</label>
+                        <input type="number" id="z4p" value="20">
+                    </div>
+                </div>
+
+                <div class="section-title">Ground Mho Reaches (Ω)</div>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Zone 1</label>
+                        <input type="number" id="z1g" value="5">
+                    </div>
+                    <div class="input-group">
+                        <label>Zone 2</label>
+                        <input type="number" id="z2g" value="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Zone 3</label>
+                        <input type="number" id="z3g" value="15">
+                    </div>
+                    <div class="input-group">
+                        <label>Zone 4</label>
+                        <input type="number" id="z4g" value="20">
+                    </div>
+                </div>
+
+                <div class="section-title">Display Options</div>
+                <div class="checkbox-group">
+                    <label class="checkbox-item zone-phase"><input type="checkbox" id="showZ1P" checked> Phase Z1</label>
+                    <label class="checkbox-item zone-ground"><input type="checkbox" id="showZ1G" checked> Ground Z1</label>
+                    <label class="checkbox-item zone-phase"><input type="checkbox" id="showZ2P" checked> Phase Z2</label>
+                    <label class="checkbox-item zone-ground"><input type="checkbox" id="showZ2G" checked> Ground Z2</label>
+                    <label class="checkbox-item zone-phase"><input type="checkbox" id="showZ3P" checked> Phase Z3</label>
+                    <label class="checkbox-item zone-ground"><input type="checkbox" id="showZ3G" checked> Ground Z3</label>
+                    <label class="checkbox-item zone-phase"><input type="checkbox" id="showZ4P" checked> Phase Z4</label>
+                    <label class="checkbox-item zone-ground"><input type="checkbox" id="showZ4G" checked> Ground Z4</label>
+                </div>
+
+                <div class="section-title">Fault Point</div>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Fault Type</label>
+                        <select id="faultType">
+                            <option value="phase">Phase Fault</option>
+                            <option value="ground">Ground Fault</option>
+                        </select>
+                    </div>
+                    <div></div>
+                    <div class="input-group">
+                        <label>R (Ω)</label>
+                        <input type="number" id="faultR" value="3" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label>X (Ω)</label>
+                        <input type="number" id="faultX" value="6" step="0.1">
+                    </div>
+                </div>
+
+                <button onclick="drawPlot()" style="width:100%; margin-top:16px;">Update Plot</button>
+            </div>
+
+            <div class="card plot-container">
+                <canvas id="canvas" width="700" height="700"></canvas>
+                <div class="trip-status no-trip" id="tripStatus">No trip</div>
+            </div>
+        </div>
+
+        <details class="show-work">
+            <summary>Show Calculations</summary>
+            <div class="show-work-content" id="calculations"></div>
+        </details>
+    </div>
+
+    <script>
+
+        function validateNumber(value, min, max, fieldName) {
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+                return { valid: false, error: `${fieldName} must be a valid number` };
+            }
+            if (min !== null && num < min) {
+                return { valid: false, error: `${fieldName} must be >= ${min}` };
+            }
+            if (max !== null && num > max) {
+                return { valid: false, error: `${fieldName} must be <= ${max}` };
+            }
+            return { valid: true, value: num };
+        }
+
+        function validatePositive(value, fieldName) {
+            const result = validateNumber(value, 0.0001, null, fieldName);
+            if (!result.valid) return result;
+            if (result.value <= 0) {
+                return { valid: false, error: `${fieldName} must be positive` };
+            }
+            return result;
+        }
+
+        function validateNonNegative(value, fieldName) {
+            return validateNumber(value, 0, null, fieldName);
+        }
+
+        function showError(message) {
+            alert('Input Error: ' + message);
+        }
+
+        function formatEngineering(value, decimals = 4) {
+            if (Math.abs(value) === 0) return '0';
+            if (Math.abs(value) >= 1e6) return (value / 1e6).toFixed(decimals) + ' M';
+            if (Math.abs(value) >= 1e3) return (value / 1e3).toFixed(decimals) + ' k';
+            if (Math.abs(value) >= 1) return value.toFixed(decimals);
+            if (Math.abs(value) >= 1e-3) return (value * 1e3).toFixed(decimals) + ' m';
+            if (Math.abs(value) >= 1e-6) return (value * 1e6).toFixed(decimals) + ' μ';
+            return value.toExponential(decimals);
+        }
+
+        function formatAngle(degrees) {
+            return degrees.toFixed(2) + '°';
+        }
+
+        function formatComplex(re, im, decimals = 4) {
+            const sign = im >= 0 ? '+' : '-';
+            return `${re.toFixed(decimals)} ${sign} j${Math.abs(im).toFixed(decimals)}`;
+        }
+
+        function formatPolar(mag, angDeg, decimals = 4) {
+            return `${mag.toFixed(decimals)} ∠ ${angDeg.toFixed(2)}°`;
+        }
+    
+        let zoom = 1.0;
+        let viewCenterR = 0.0;
+        let viewCenterX = 0.0;
+        let isDragging = false;
+        let dragStartR = 0, dragStartX = 0;
+        let dragStartMouseX = 0, dragStartMouseY = 0;
+
+        // Attach event listeners to all inputs
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('change', drawPlot);
+            el.addEventListener('input', drawPlot);
+        });
+
+        function copyK0() {
+            const z1mag = parseFloat(document.getElementById('z1mag').value);
+            const z0mag = parseFloat(document.getElementById('z0mag').value);
+            const lineAngleDeg = parseFloat(document.getElementById('lineAngle').value);
+            const z0angDeg = parseFloat(document.getElementById('z0ang').value);
+
+            if (isNaN(z1mag) || isNaN(z0mag) || z1mag <= 0 || z0mag <= 0) {
+                alert('Please enter valid Z1 and Z0 magnitudes.');
+                return;
+            }
+
+            const lineAngleRad = lineAngleDeg * Math.PI / 180;
+            const z0angRad = z0angDeg * Math.PI / 180;
+
+            const z1_re = z1mag * Math.cos(lineAngleRad);
+            const z1_im = z1mag * Math.sin(lineAngleRad);
+            const z0_re = z0mag * Math.cos(z0angRad);
+            const z0_im = z0mag * Math.sin(z0angRad);
+
+            const z1_mag_sq = z1_re * z1_re + z1_im * z1_im;
+            const z0_over_z1_re = (z0_re * z1_re + z0_im * z1_im) / z1_mag_sq;
+            const z0_over_z1_im = (z0_im * z1_re - z0_re * z1_im) / z1_mag_sq;
+
+            const k0_re = (z0_over_z1_re - 1) / 3;
+            const k0_im = z0_over_z1_im / 3;
+
+            const k0m = Math.sqrt(k0_re * k0_re + k0_im * k0_im);
+            const k0a = Math.atan2(k0_im, k0_re) * 180 / Math.PI;
+
+            document.getElementById('k0m').value = k0m.toFixed(3);
+            document.getElementById('k0a').value = k0a.toFixed(1);
+            drawPlot();
+        }
+
+        function getReaches() {
+            return {
+                p1: parseFloat(document.getElementById('z1p').value),
+                p2: parseFloat(document.getElementById('z2p').value),
+                p3: parseFloat(document.getElementById('z3p').value),
+                p4: parseFloat(document.getElementById('z4p').value),
+                g1: parseFloat(document.getElementById('z1g').value),
+                g2: parseFloat(document.getElementById('z2g').value),
+                g3: parseFloat(document.getElementById('z3g').value),
+                g4: parseFloat(document.getElementById('z4g').value)
+            };
+        }
+
+        function getShows() {
+            return {
+                p1: document.getElementById('showZ1P').checked,
+                p2: document.getElementById('showZ2P').checked,
+                p3: document.getElementById('showZ3P').checked,
+                p4: document.getElementById('showZ4P').checked,
+                g1: document.getElementById('showZ1G').checked,
+                g2: document.getElementById('showZ2G').checked,
+                g3: document.getElementById('showZ3G').checked,
+                g4: document.getElementById('showZ4G').checked
+            };
+        }
+
+        function drawPlot() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Background
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, width, height);
+
+            // Settings
+            const lineAngleDeg = parseFloat(document.getElementById('lineAngle').value);
+            const lineAngleRad = lineAngleDeg * Math.PI / 180;
+
+            const reaches = getReaches();
+            const shows = getShows();
+
+            const faultR = parseFloat(document.getElementById('faultR').value);
+            const faultX = parseFloat(document.getElementById('faultX').value);
+            const faultType = document.getElementById('faultType').value;
+
+            const z1mag = parseFloat(document.getElementById('z1mag').value);
+            const z0mag = parseFloat(document.getElementById('z0mag').value);
+            const z0angDeg = parseFloat(document.getElementById('z0ang').value);
+            const k0m_set = parseFloat(document.getElementById('k0m').value);
+            const k0a_set = parseFloat(document.getElementById('k0a').value);
+
+            // Compute k0
+            let k0_re = 0, k0_im = 0;
+            let calcText = '';
+            if (!isNaN(z1mag) && !isNaN(z0mag) && z1mag > 0 && z0mag > 0 && !isNaN(z0angDeg)) {
+                const z0angRad = z0angDeg * Math.PI / 180;
+                const z1_re = z1mag * Math.cos(lineAngleRad);
+                const z1_im = z1mag * Math.sin(lineAngleRad);
+                const z0_re = z0mag * Math.cos(z0angRad);
+                const z0_im = z0mag * Math.sin(z0angRad);
+
+                const z1_mag_sq = z1_re * z1_re + z1_im * z1_im;
+                const z0_over_z1_re = (z0_re * z1_re + z0_im * z1_im) / z1_mag_sq;
+                const z0_over_z1_im = (z0_im * z1_re - z0_re * z1_im) / z1_mag_sq;
+
+                k0_re = (z0_over_z1_re - 1) / 3;
+                k0_im = z0_over_z1_im / 3;
+
+                const k0m = Math.sqrt(k0_re * k0_re + k0_im * k0_im);
+                const k0a = Math.atan2(k0_im, k0_re) * 180 / Math.PI;
+
+                document.getElementById('computedK0').innerHTML =
+                    `<strong>Computed k₀:</strong> ${k0m.toFixed(4)} ∠ ${k0a.toFixed(2)}°`;
+
+                calcText = `Zero Sequence Compensation Factor k₀:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+k₀ = (Z₀/Z₁ - 1) / 3
+
+Given:
+  Z₁ = ${z1mag} ∠ ${lineAngleDeg}° Ω = ${z1_re.toFixed(4)} + j${z1_im.toFixed(4)} Ω
+  Z₀ = ${z0mag} ∠ ${z0angDeg}° Ω = ${z0_re.toFixed(4)} + j${z0_im.toFixed(4)} Ω
+
+Calculation:
+  Z₀/Z₁ = ${z0_over_z1_re.toFixed(4)} + j${z0_over_z1_im.toFixed(4)}
+  k₀ = (${z0_over_z1_re.toFixed(4)} - 1)/3 + j${z0_over_z1_im.toFixed(4)}/3
+  k₀ = ${k0_re.toFixed(4)} + j${k0_im.toFixed(4)}
+  k₀ = ${k0m.toFixed(4)} ∠ ${k0a.toFixed(2)}°
+`;
+            }
+
+            // Scale
+            let maxReach = Math.max(...Object.values(reaches)) || 1;
+            const baseScale = Math.min(width, height) / (3 * maxReach);
+            const scale = baseScale * zoom;
+            if (scale === 0) return;
+
+            // Visible range
+            const minR = viewCenterR - (centerX / scale);
+            const maxR = viewCenterR + ((width - centerX) / scale);
+            const minX = viewCenterX - ((height - centerY) / scale);
+            const maxX = viewCenterX + (centerY / scale);
+            const visibleWidth = maxR - minR;
+
+            // Grid
+            let gridInterval = Math.pow(10, Math.floor(Math.log10(visibleWidth / 10)));
+            if (gridInterval <= 0 || !isFinite(gridInterval)) gridInterval = 1;
+            const decimals = gridInterval < 1 ? 1 : 0;
+
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 0.5;
+
+            // R grid
+            let gridStart = Math.ceil(minR / gridInterval) * gridInterval;
+            for (let r = gridStart; r <= maxR; r += gridInterval) {
+                const px = centerX + (r - viewCenterR) * scale;
+                ctx.beginPath();
+                ctx.moveTo(px, 0);
+                ctx.lineTo(px, height);
+                ctx.stroke();
+            }
+
+            // X grid
+            gridStart = Math.ceil(minX / gridInterval) * gridInterval;
+            for (let x = gridStart; x <= maxX; x += gridInterval) {
+                const py = centerY - (x - viewCenterX) * scale;
+                ctx.beginPath();
+                ctx.moveTo(0, py);
+                ctx.lineTo(width, py);
+                ctx.stroke();
+            }
+
+            // Axes
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 1;
+            const axisX = centerX + (0 - viewCenterR) * scale;
+            const axisY = centerY - (0 - viewCenterX) * scale;
+            ctx.beginPath();
+            ctx.moveTo(axisX, 0);
+            ctx.lineTo(axisX, height);
+            ctx.moveTo(0, axisY);
+            ctx.lineTo(width, axisY);
+            ctx.stroke();
+
+            // Axis labels
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px -apple-system, sans-serif';
+            ctx.fillText('R (Ω)', width - 50, axisY - 10);
+            ctx.fillText('X (Ω)', axisX + 10, 20);
+
+            // Grid labels
+            ctx.font = '10px -apple-system, sans-serif';
+            gridStart = Math.ceil(minR / gridInterval) * gridInterval;
+            for (let r = gridStart; r <= maxR; r += gridInterval) {
+                if (Math.abs(r) < gridInterval/10) continue;
+                const px = centerX + (r - viewCenterR) * scale;
+                ctx.fillText(r.toFixed(decimals), px - 10, axisY + 15);
+            }
+            gridStart = Math.ceil(minX / gridInterval) * gridInterval;
+            for (let x = gridStart; x <= maxX; x += gridInterval) {
+                if (Math.abs(x) < gridInterval/10) continue;
+                const py = centerY - (x - viewCenterX) * scale;
+                ctx.fillText(x.toFixed(decimals), axisX + 5, py + 4);
+            }
+
+            // Draw Mho circles
+            function drawMho(reach, color, label, isDashed = false) {
+                if (reach <= 0) return;
+                const cR = (reach / 2) * Math.cos(lineAngleRad);
+                const cX = (reach / 2) * Math.sin(lineAngleRad);
+                const rad = reach / 2;
+
+                const cpx = centerX + (cR - viewCenterR) * scale;
+                const cpy = centerY - (cX - viewCenterX) * scale;
+                const rpx = rad * scale;
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                if (isDashed) ctx.setLineDash([8, 4]);
+                else ctx.setLineDash([]);
+
+                ctx.beginPath();
+                ctx.arc(cpx, cpy, rpx, 0, 2 * Math.PI);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Label
+                const reachR = reach * Math.cos(lineAngleRad);
+                const reachX = reach * Math.sin(lineAngleRad);
+                const lx = centerX + (reachR - viewCenterR) * scale;
+                const ly = centerY - (reachX - viewCenterX) * scale;
+                ctx.fillStyle = color;
+                ctx.font = 'bold 11px -apple-system, sans-serif';
+                ctx.fillText(label, lx + 8, ly - 8);
+            }
+
+            // Phase circles (blue shades)
+            if (shows.p1) drawMho(reaches.p1, '#3b82f6', 'P1');
+            if (shows.p2) drawMho(reaches.p2, '#60a5fa', 'P2');
+            if (shows.p3) drawMho(reaches.p3, '#93c5fd', 'P3', true);
+            if (shows.p4) drawMho(reaches.p4, '#bfdbfe', 'P4', true);
+
+            // Ground circles (green shades)
+            if (shows.g1) drawMho(reaches.g1, '#22c55e', 'G1');
+            if (shows.g2) drawMho(reaches.g2, '#4ade80', 'G2');
+            if (shows.g3) drawMho(reaches.g3, '#86efac', 'G3', true);
+            if (shows.g4) drawMho(reaches.g4, '#bbf7d0', 'G4', true);
+
+            // Line angle indicator
+            const lineLen = maxReach * 1.2;
+            const lineEndR = lineLen * Math.cos(lineAngleRad);
+            const lineEndX = lineLen * Math.sin(lineAngleRad);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(centerX + (0 - viewCenterR) * scale, centerY - (0 - viewCenterX) * scale);
+            ctx.lineTo(centerX + (lineEndR - viewCenterR) * scale, centerY - (lineEndX - viewCenterX) * scale);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Fault point
+            let plotR = faultR;
+            let plotX = faultX;
+            let faultLabel = `(${faultR.toFixed(1)}, ${faultX.toFixed(1)})`;
+
+            if (faultType === 'ground' && !isNaN(k0m_set) && !isNaN(k0a_set)) {
+                // Apply ground compensation
+                const one_plus_k0t_re = 1 + k0_re;
+                const one_plus_k0t_im = k0_im;
+
+                let zapp_re = faultR * one_plus_k0t_re - faultX * one_plus_k0t_im;
+                let zapp_im = faultR * one_plus_k0t_im + faultX * one_plus_k0t_re;
+
+                const k0s_rad = k0a_set * Math.PI / 180;
+                const k0s_re = k0m_set * Math.cos(k0s_rad);
+                const k0s_im = k0m_set * Math.sin(k0s_rad);
+
+                const one_plus_k0s_re = 1 + k0s_re;
+                const one_plus_k0s_im = k0s_im;
+
+                let denom = one_plus_k0s_re * one_plus_k0s_re + one_plus_k0s_im * one_plus_k0s_im;
+                if (denom === 0) denom = 1e-6;
+                plotR = (zapp_re * one_plus_k0s_re + zapp_im * one_plus_k0s_im) / denom;
+                plotX = (zapp_im * one_plus_k0s_re - zapp_re * one_plus_k0s_im) / denom;
+
+                faultLabel = `(${faultR.toFixed(1)}, ${faultX.toFixed(1)}) → Comp: (${plotR.toFixed(2)}, ${plotX.toFixed(2)})`;
+
+                calcText += `
+Ground Fault Compensation:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Actual fault impedance: Z = ${faultR} + j${faultX} Ω
+
+Relay sees: Z_apparent = Z × (1 + k₀_true) / (1 + k₀_set)
+
+Where:
+  k₀_true = ${k0_re.toFixed(4)} + j${k0_im.toFixed(4)} (from line)
+  k₀_set  = ${k0m_set} ∠ ${k0a_set}° (relay setting)
+
+Result:
+  Z_apparent = ${plotR.toFixed(4)} + j${plotX.toFixed(4)} Ω
+`;
+            }
+
+            // Draw fault point
+            if (!isNaN(faultR) && !isNaN(faultX)) {
+                const fpx = centerX + (plotR - viewCenterR) * scale;
+                const fpy = centerY - (plotX - viewCenterX) * scale;
+
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(fpx, fpy, 6, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.fillStyle = '#e2e8f0';
+                ctx.font = '11px -apple-system, sans-serif';
+                ctx.fillText(faultLabel, fpx + 12, fpy - 8);
+            }
+
+            // Check trips
+            function isInsideMho(reach, r, x) {
+                if (reach <= 0) return false;
+                const cr = (reach / 2) * Math.cos(lineAngleRad);
+                const cx = (reach / 2) * Math.sin(lineAngleRad);
+                const dist = Math.sqrt((r - cr) ** 2 + (x - cx) ** 2);
+                return dist <= (reach / 2);
+            }
+
+            let trippingZones = [];
+            if (!isNaN(plotR) && !isNaN(plotX)) {
+                const zonesToCheck = faultType === 'phase' ? ['p1', 'p2', 'p3', 'p4'] : ['g1', 'g2', 'g3', 'g4'];
+                zonesToCheck.forEach(z => {
+                    if (shows[z] && isInsideMho(reaches[z], plotR, plotX)) {
+                        trippingZones.push((z[0] === 'p' ? 'Phase ' : 'Ground ') + 'Zone ' + z[1]);
+                    }
+                });
+            }
+
+            const tripStatus = document.getElementById('tripStatus');
+            if (trippingZones.length > 0) {
+                tripStatus.className = 'trip-status trip';
+                tripStatus.textContent = 'TRIP: ' + trippingZones.join(', ');
+            } else {
+                tripStatus.className = 'trip-status no-trip';
+                tripStatus.textContent = 'No trip - Fault outside all enabled zones';
+            }
+
+            document.getElementById('calculations').textContent = calcText;
+        }
+
+        // Initial draw
+        drawPlot();
+
+        // Mouse events for zoom/pan
+        const canvas = document.getElementById('canvas');
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+
+            const reaches = getReaches();
+            let maxReach = Math.max(...Object.values(reaches)) || 1;
+            const baseScale = Math.min(canvas.width, canvas.height) / (3 * maxReach);
+            const currentScale = baseScale * zoom;
+
+            const mouseR = viewCenterR + (mx - canvas.width/2) / currentScale;
+            const mouseX = viewCenterX + (canvas.height/2 - my) / currentScale;
+
+            const zoomFactor = e.deltaY < 0 ? 1.2 : 1/1.2;
+            zoom *= zoomFactor;
+            zoom = Math.max(0.1, Math.min(20, zoom));
+
+            viewCenterR = mouseR - (mx - canvas.width/2) / (baseScale * zoom);
+            viewCenterX = mouseX - (canvas.height/2 - my) / (baseScale * zoom);
+
+            drawPlot();
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            canvas.style.cursor = 'grabbing';
+            const rect = canvas.getBoundingClientRect();
+            dragStartMouseX = e.clientX - rect.left;
+            dragStartMouseY = e.clientY - rect.top;
+            dragStartR = viewCenterR;
+            dragStartX = viewCenterX;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+
+            const reaches = getReaches();
+            let maxReach = Math.max(...Object.values(reaches)) || 1;
+            const baseScale = Math.min(canvas.width, canvas.height) / (3 * maxReach);
+            const currentScale = baseScale * zoom;
+
+            const deltaX = mx - dragStartMouseX;
+            const deltaY = my - dragStartMouseY;
+
+            viewCenterR = dragStartR - deltaX / currentScale;
+            viewCenterX = dragStartX + deltaY / currentScale;
+
+            drawPlot();
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequence Component Converter</title>
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2, h3, h4 {
+            color: #e2e8f0;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        h3 {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button.secondary {
+            background: #334155;
+            border: 1px solid #475569;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .unit {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-left: 4px;
+        }
+
+        .results {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .results .value {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .results .success {
+            color: #10b981;
+        }
+
+        .results .warning {
+            color: #f59e0b;
+        }
+
+        .results .error {
+            color: #ef4444;
+        }
+
+        .show-work {
+            margin-top: 16px;
+        }
+
+        .show-work summary {
+            cursor: pointer;
+            color: #3b82f6;
+            font-size: 0.875rem;
+            padding: 8px 0;
+        }
+
+        .show-work summary:hover {
+            text-decoration: underline;
+        }
+
+        .show-work-content {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+        }
+
+        canvas {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            display: block;
+            max-width: 100%;
+        }
+
+        .canvas-container {
+            position: relative;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 1px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+
+        .back-link:hover {
+            color: #3b82f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #475569;
+        }
+
+        th {
+            background: #0f172a;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .card {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            .results, .show-work-content {
+                background: #f5f5f5;
+                border: 1px solid #ccc;
+            }
+            canvas {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            button, .back-link {
+                display: none;
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .input-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    
+        .calc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .phasor-input {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .phasor-label {
+            grid-column: 1 / -1;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .phase-a { color: #ef4444; }
+        .phase-b { color: #22c55e; }
+        .phase-c { color: #3b82f6; }
+        .seq-pos { color: #f59e0b; }
+        .seq-neg { color: #8b5cf6; }
+        .seq-zero { color: #06b6d4; }
+        .result-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 1fr;
+            gap: 12px;
+            padding: 12px;
+            background: #0f172a;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .result-row .label {
+            font-weight: 600;
+        }
+        .result-row .value {
+            font-family: 'Consolas', monospace;
+        }
+        .mode-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+        }
+        .mode-tab {
+            flex: 1;
+            padding: 12px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: #94a3b8;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .mode-tab:first-child {
+            border-radius: 4px 0 0 4px;
+        }
+        .mode-tab:last-child {
+            border-radius: 0 4px 4px 0;
+        }
+        .mode-tab.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+        .mode-tab:hover:not(.active) {
+            background: #334155;
+        }
+        canvas {
+            max-width: 100%;
+        }
+        @media (max-width: 900px) {
+            .calc-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Tools</a>
+        <h1>Sequence Component Converter</h1>
+
+        <div class="mode-tabs">
+            <div class="mode-tab active" onclick="setMode('abc')">ABC → Sequence</div>
+            <div class="mode-tab" onclick="setMode('seq')">Sequence → ABC</div>
+        </div>
+
+        <div class="calc-grid">
+            <div class="card" id="inputCard">
+                <h2 id="inputTitle">Phase Quantities (ABC)</h2>
+
+                <div id="abcInputs">
+                    <div class="phasor-input">
+                        <div class="phasor-label phase-a">Phase A</div>
+                        <div class="input-group">
+                            <label>Magnitude</label>
+                            <input type="number" id="Va_mag" value="100" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Angle (°)</label>
+                            <input type="number" id="Va_ang" value="0" step="0.1">
+                        </div>
+                    </div>
+                    <div class="phasor-input">
+                        <div class="phasor-label phase-b">Phase B</div>
+                        <div class="input-group">
+                            <label>Magnitude</label>
+                            <input type="number" id="Vb_mag" value="100" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Angle (°)</label>
+                            <input type="number" id="Vb_ang" value="-120" step="0.1">
+                        </div>
+                    </div>
+                    <div class="phasor-input">
+                        <div class="phasor-label phase-c">Phase C</div>
+                        <div class="input-group">
+                            <label>Magnitude</label>
+                            <input type="number" id="Vc_mag" value="100" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Angle (°)</label>
+                            <input type="number" id="Vc_ang" value="120" step="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="seqInputs" style="display:none;">
+                    <div class="phasor-input">
+                        <div class="phasor-label seq-pos">Positive Sequence (V₁)</div>
+                        <div class="input-group">
+                            <label>Magnitude</label>
+                            <input type="number" id="V1_mag" value="100" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Angle (°)</label>
+                            <input type="number" id="V1_ang" value="0" step="0.1">
+                        </div>
+                    </div>
+                    <div class="phasor-input">
+                        <div class="phasor-label seq-neg">Negative Sequence (V₂)</div>
+                        <div class="input-group">
+                            <label>Magnitude</label>
+                            <input type="number" id="V2_mag" value="0" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Angle (°)</label>
+                            <input type="number" id="V2_ang" value="0" step="0.1">
+                        </div>
+                    </div>
+                    <div class="phasor-input">
+                        <div class="phasor-label seq-zero">Zero Sequence (V₀)</div>
+                        <div class="input-group">
+                            <label>Magnitude</label>
+                            <input type="number" id="V0_mag" value="0" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Angle (°)</label>
+                            <input type="number" id="V0_ang" value="0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="calculate()" style="width:100%; margin-top:16px;">Calculate</button>
+                <button class="secondary" onclick="setBalanced()" style="width:100%; margin-top:8px;">Set Balanced ABC</button>
+            </div>
+
+            <div class="card">
+                <h2 id="outputTitle">Sequence Components</h2>
+                <div id="results">
+                    <div class="result-row">
+                        <span class="label seq-pos">V₁</span>
+                        <span class="value" id="r_V1_rect">--</span>
+                        <span class="value" id="r_V1_polar">--</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="label seq-neg">V₂</span>
+                        <span class="value" id="r_V2_rect">--</span>
+                        <span class="value" id="r_V2_polar">--</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="label seq-zero">V₀</span>
+                        <span class="value" id="r_V0_rect">--</span>
+                        <span class="value" id="r_V0_polar">--</span>
+                    </div>
+                </div>
+
+                <h3 style="margin-top:20px;">Phasor Diagram</h3>
+                <canvas id="phasorCanvas" width="400" height="400"></canvas>
+                <div class="legend" style="margin-top:12px;">
+                    <div class="legend-item"><div class="legend-color" style="background:#ef4444"></div>Phase A</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#22c55e"></div>Phase B</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#3b82f6"></div>Phase C</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#f59e0b"></div>V₁ (pos)</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#8b5cf6"></div>V₂ (neg)</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#06b6d4"></div>V₀ (zero)</div>
+                </div>
+            </div>
+        </div>
+
+        <details class="show-work">
+            <summary>Show Formulas</summary>
+            <div class="show-work-content" id="formulas">
+Symmetrical Components Transformation:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The operator a = 1∠120° = -0.5 + j0.866
+
+ABC to Sequence:
+┌     ┐   ┌           ┐   ┌    ┐
+│ V₀  │   │ 1   1   1 │   │ Vₐ │
+│ V₁  │ = │ 1   a   a²│ × │ Vᵦ │  × (1/3)
+│ V₂  │   │ 1   a²  a │   │ Vᶜ │
+└     ┘   └           ┘   └    ┘
+
+Sequence to ABC:
+┌    ┐   ┌           ┐   ┌    ┐
+│ Vₐ │   │ 1   1   1 │   │ V₀ │
+│ Vᵦ │ = │ 1   a²  a │ × │ V₁ │
+│ Vᶜ │   │ 1   a   a²│   │ V₂ │
+└    ┘   └           ┘   └    ┘
+
+Where:
+  a = e^(j2π/3) = 1∠120° = -0.5 + j0.866
+  a² = e^(j4π/3) = 1∠240° = -0.5 - j0.866
+  a³ = 1
+
+Physical Interpretation:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• V₁ (Positive): Balanced set rotating ABC
+• V₂ (Negative): Balanced set rotating ACB
+• V₀ (Zero): Three equal phasors in phase
+            </div>
+        </details>
+    </div>
+
+    <script>
+
+        function validateNumber(value, min, max, fieldName) {
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+                return { valid: false, error: `${fieldName} must be a valid number` };
+            }
+            if (min !== null && num < min) {
+                return { valid: false, error: `${fieldName} must be >= ${min}` };
+            }
+            if (max !== null && num > max) {
+                return { valid: false, error: `${fieldName} must be <= ${max}` };
+            }
+            return { valid: true, value: num };
+        }
+
+        function validatePositive(value, fieldName) {
+            const result = validateNumber(value, 0.0001, null, fieldName);
+            if (!result.valid) return result;
+            if (result.value <= 0) {
+                return { valid: false, error: `${fieldName} must be positive` };
+            }
+            return result;
+        }
+
+        function validateNonNegative(value, fieldName) {
+            return validateNumber(value, 0, null, fieldName);
+        }
+
+        function showError(message) {
+            alert('Input Error: ' + message);
+        }
+
+        function formatEngineering(value, decimals = 4) {
+            if (Math.abs(value) === 0) return '0';
+            if (Math.abs(value) >= 1e6) return (value / 1e6).toFixed(decimals) + ' M';
+            if (Math.abs(value) >= 1e3) return (value / 1e3).toFixed(decimals) + ' k';
+            if (Math.abs(value) >= 1) return value.toFixed(decimals);
+            if (Math.abs(value) >= 1e-3) return (value * 1e3).toFixed(decimals) + ' m';
+            if (Math.abs(value) >= 1e-6) return (value * 1e6).toFixed(decimals) + ' μ';
+            return value.toExponential(decimals);
+        }
+
+        function formatAngle(degrees) {
+            return degrees.toFixed(2) + '°';
+        }
+
+        function formatComplex(re, im, decimals = 4) {
+            const sign = im >= 0 ? '+' : '-';
+            return `${re.toFixed(decimals)} ${sign} j${Math.abs(im).toFixed(decimals)}`;
+        }
+
+        function formatPolar(mag, angDeg, decimals = 4) {
+            return `${mag.toFixed(decimals)} ∠ ${angDeg.toFixed(2)}°`;
+        }
+    
+        let mode = 'abc';  // 'abc' or 'seq'
+
+        // Operator a = 1∠120°
+        const a_re = -0.5;
+        const a_im = Math.sqrt(3)/2;
+        // a² = 1∠240°
+        const a2_re = -0.5;
+        const a2_im = -Math.sqrt(3)/2;
+
+        function setMode(newMode) {
+            mode = newMode;
+            document.querySelectorAll('.mode-tab').forEach((tab, i) => {
+                tab.classList.toggle('active', (i === 0 && mode === 'abc') || (i === 1 && mode === 'seq'));
+            });
+
+            document.getElementById('abcInputs').style.display = mode === 'abc' ? 'block' : 'none';
+            document.getElementById('seqInputs').style.display = mode === 'seq' ? 'block' : 'none';
+            document.getElementById('inputTitle').textContent = mode === 'abc' ? 'Phase Quantities (ABC)' : 'Sequence Components';
+            document.getElementById('outputTitle').textContent = mode === 'abc' ? 'Sequence Components' : 'Phase Quantities (ABC)';
+
+            // Update result labels
+            if (mode === 'abc') {
+                document.querySelector('#results .result-row:nth-child(1) .label').textContent = 'V₁';
+                document.querySelector('#results .result-row:nth-child(1) .label').className = 'label seq-pos';
+                document.querySelector('#results .result-row:nth-child(2) .label').textContent = 'V₂';
+                document.querySelector('#results .result-row:nth-child(2) .label').className = 'label seq-neg';
+                document.querySelector('#results .result-row:nth-child(3) .label').textContent = 'V₀';
+                document.querySelector('#results .result-row:nth-child(3) .label').className = 'label seq-zero';
+            } else {
+                document.querySelector('#results .result-row:nth-child(1) .label').textContent = 'Vₐ';
+                document.querySelector('#results .result-row:nth-child(1) .label').className = 'label phase-a';
+                document.querySelector('#results .result-row:nth-child(2) .label').textContent = 'Vᵦ';
+                document.querySelector('#results .result-row:nth-child(2) .label').className = 'label phase-b';
+                document.querySelector('#results .result-row:nth-child(3) .label').textContent = 'Vᶜ';
+                document.querySelector('#results .result-row:nth-child(3) .label').className = 'label phase-c';
+            }
+        }
+
+        function setBalanced() {
+            document.getElementById('Va_mag').value = '100';
+            document.getElementById('Va_ang').value = '0';
+            document.getElementById('Vb_mag').value = '100';
+            document.getElementById('Vb_ang').value = '-120';
+            document.getElementById('Vc_mag').value = '100';
+            document.getElementById('Vc_ang').value = '120';
+            if (mode === 'abc') calculate();
+        }
+
+        function polarToRect(mag, angDeg) {
+            const angRad = angDeg * Math.PI / 180;
+            return { re: mag * Math.cos(angRad), im: mag * Math.sin(angRad) };
+        }
+
+        function rectToPolar(re, im) {
+            const mag = Math.sqrt(re*re + im*im);
+            const ang = Math.atan2(im, re) * 180 / Math.PI;
+            return { mag, ang };
+        }
+
+        function complexMult(a, b) {
+            return { re: a.re*b.re - a.im*b.im, im: a.re*b.im + a.im*b.re };
+        }
+
+        function complexAdd(a, b) {
+            return { re: a.re + b.re, im: a.im + b.im };
+        }
+
+        function calculate() {
+            let Va, Vb, Vc, V0, V1, V2;
+
+            if (mode === 'abc') {
+                // Get ABC inputs
+                Va = polarToRect(parseFloat(document.getElementById('Va_mag').value),
+                                 parseFloat(document.getElementById('Va_ang').value));
+                Vb = polarToRect(parseFloat(document.getElementById('Vb_mag').value),
+                                 parseFloat(document.getElementById('Vb_ang').value));
+                Vc = polarToRect(parseFloat(document.getElementById('Vc_mag').value),
+                                 parseFloat(document.getElementById('Vc_ang').value));
+
+                // Convert to sequence
+                const a = { re: a_re, im: a_im };
+                const a2 = { re: a2_re, im: a2_im };
+
+                // V0 = (Va + Vb + Vc) / 3
+                V0 = { re: (Va.re + Vb.re + Vc.re) / 3, im: (Va.im + Vb.im + Vc.im) / 3 };
+
+                // V1 = (Va + a*Vb + a²*Vc) / 3
+                const aVb = complexMult(a, Vb);
+                const a2Vc = complexMult(a2, Vc);
+                V1 = { re: (Va.re + aVb.re + a2Vc.re) / 3, im: (Va.im + aVb.im + a2Vc.im) / 3 };
+
+                // V2 = (Va + a²*Vb + a*Vc) / 3
+                const a2Vb = complexMult(a2, Vb);
+                const aVc = complexMult(a, Vc);
+                V2 = { re: (Va.re + a2Vb.re + aVc.re) / 3, im: (Va.im + a2Vb.im + aVc.im) / 3 };
+
+                // Display results
+                const V1p = rectToPolar(V1.re, V1.im);
+                const V2p = rectToPolar(V2.re, V2.im);
+                const V0p = rectToPolar(V0.re, V0.im);
+
+                document.getElementById('r_V1_rect').textContent = `${V1.re.toFixed(3)} + j${V1.im.toFixed(3)}`;
+                document.getElementById('r_V1_polar').textContent = `${V1p.mag.toFixed(3)} ∠ ${V1p.ang.toFixed(2)}°`;
+                document.getElementById('r_V2_rect').textContent = `${V2.re.toFixed(3)} + j${V2.im.toFixed(3)}`;
+                document.getElementById('r_V2_polar').textContent = `${V2p.mag.toFixed(3)} ∠ ${V2p.ang.toFixed(2)}°`;
+                document.getElementById('r_V0_rect').textContent = `${V0.re.toFixed(3)} + j${V0.im.toFixed(3)}`;
+                document.getElementById('r_V0_polar').textContent = `${V0p.mag.toFixed(3)} ∠ ${V0p.ang.toFixed(2)}°`;
+
+            } else {
+                // Get sequence inputs
+                V1 = polarToRect(parseFloat(document.getElementById('V1_mag').value),
+                                 parseFloat(document.getElementById('V1_ang').value));
+                V2 = polarToRect(parseFloat(document.getElementById('V2_mag').value),
+                                 parseFloat(document.getElementById('V2_ang').value));
+                V0 = polarToRect(parseFloat(document.getElementById('V0_mag').value),
+                                 parseFloat(document.getElementById('V0_ang').value));
+
+                // Convert to ABC
+                const a = { re: a_re, im: a_im };
+                const a2 = { re: a2_re, im: a2_im };
+
+                // Va = V0 + V1 + V2
+                Va = complexAdd(complexAdd(V0, V1), V2);
+
+                // Vb = V0 + a²*V1 + a*V2
+                Vb = complexAdd(complexAdd(V0, complexMult(a2, V1)), complexMult(a, V2));
+
+                // Vc = V0 + a*V1 + a²*V2
+                Vc = complexAdd(complexAdd(V0, complexMult(a, V1)), complexMult(a2, V2));
+
+                // Display results
+                const Vap = rectToPolar(Va.re, Va.im);
+                const Vbp = rectToPolar(Vb.re, Vb.im);
+                const Vcp = rectToPolar(Vc.re, Vc.im);
+
+                document.getElementById('r_V1_rect').textContent = `${Va.re.toFixed(3)} + j${Va.im.toFixed(3)}`;
+                document.getElementById('r_V1_polar').textContent = `${Vap.mag.toFixed(3)} ∠ ${Vap.ang.toFixed(2)}°`;
+                document.getElementById('r_V2_rect').textContent = `${Vb.re.toFixed(3)} + j${Vb.im.toFixed(3)}`;
+                document.getElementById('r_V2_polar').textContent = `${Vbp.mag.toFixed(3)} ∠ ${Vbp.ang.toFixed(2)}°`;
+                document.getElementById('r_V0_rect').textContent = `${Vc.re.toFixed(3)} + j${Vc.im.toFixed(3)}`;
+                document.getElementById('r_V0_polar').textContent = `${Vcp.mag.toFixed(3)} ∠ ${Vcp.ang.toFixed(2)}°`;
+            }
+
+            drawPhasors(Va, Vb, Vc, V0, V1, V2);
+        }
+
+        function drawPhasors(Va, Vb, Vc, V0, V1, V2) {
+            const canvas = document.getElementById('phasorCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+            const cx = w/2, cy = h/2;
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, w, h);
+
+            // Find max magnitude for scaling
+            const mags = [Va, Vb, Vc, V0, V1, V2].map(v => Math.sqrt(v.re*v.re + v.im*v.im));
+            const maxMag = Math.max(...mags, 1);
+            const scale = (Math.min(w, h) / 2 - 40) / maxMag;
+
+            // Grid circles
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 0.5;
+            for (let r = scale * maxMag / 4; r <= scale * maxMag; r += scale * maxMag / 4) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+
+            // Axes
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+            ctx.moveTo(cx, 0); ctx.lineTo(cx, h);
+            ctx.stroke();
+
+            function drawArrow(v, color, dashed = false) {
+                const x = cx + v.re * scale;
+                const y = cy - v.im * scale;
+                const ang = Math.atan2(-v.im, v.re);
+                const headLen = 10;
+
+                ctx.strokeStyle = color;
+                ctx.fillStyle = color;
+                ctx.lineWidth = 2;
+                if (dashed) ctx.setLineDash([5, 5]);
+                else ctx.setLineDash([]);
+
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x - headLen * Math.cos(ang - Math.PI/6), y + headLen * Math.sin(ang - Math.PI/6));
+                ctx.lineTo(x - headLen * Math.cos(ang + Math.PI/6), y + headLen * Math.sin(ang + Math.PI/6));
+                ctx.closePath();
+                ctx.fill();
+                ctx.setLineDash([]);
+            }
+
+            // Draw ABC (solid)
+            drawArrow(Va, '#ef4444');
+            drawArrow(Vb, '#22c55e');
+            drawArrow(Vc, '#3b82f6');
+
+            // Draw sequence (dashed)
+            drawArrow(V1, '#f59e0b', true);
+            drawArrow(V2, '#8b5cf6', true);
+            drawArrow(V0, '#06b6d4', true);
+        }
+
+        // Initial calculation
+        calculate();
+    </script>
+</body>
+</html>

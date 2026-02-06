@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Power systems engineering calculators and tools for relay engineers.">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <title>Relay Tools - TripCoil</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 24px;
+            line-height: 1.5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 680px;
+        }
+
+        .back {
+            display: inline-block;
+            color: #86868b;
+            text-decoration: none;
+            font-size: 0.95rem;
+            margin-bottom: 40px;
+            transition: color 0.2s;
+        }
+
+        .back:hover {
+            color: #fff;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+        }
+
+        .tagline {
+            font-size: 1.15rem;
+            color: #86868b;
+            font-weight: 400;
+        }
+
+        .tools {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: #1d1d1f;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .tool {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            background: #000;
+            text-decoration: none;
+            color: #fff;
+            transition: background 0.2s;
+        }
+
+        .tool:hover {
+            background: #1d1d1f;
+        }
+
+        .tool-info {
+            flex: 1;
+        }
+
+        .tool-name {
+            font-size: 1.05rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .tool-desc {
+            font-size: 0.875rem;
+            color: #86868b;
+        }
+
+        .tool-arrow {
+            color: #86868b;
+            font-size: 1.25rem;
+            margin-left: 16px;
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .tool:hover .tool-arrow {
+            transform: translateX(4px);
+            color: #fff;
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .tagline {
+                font-size: 1rem;
+            }
+
+            .tool {
+                padding: 18px 20px;
+            }
+
+            .tool-name {
+                font-size: 0.95rem;
+            }
+
+            .tool-desc {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .tool, .tool-arrow, .back {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back">← TripCoil</a>
+
+        <header>
+            <h1>Relay Tools</h1>
+            <p class="tagline">Calculators for power systems engineers</p>
+        </header>
+
+        <nav class="tools" role="navigation" aria-label="Available tools">
+            <a href="power-systems-solver.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Power Systems Solver</div>
+                    <div class="tool-desc">Step-by-step solutions for symmetrical components and phasor math</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="fault-current-calculator.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Fault Current Calculator</div>
+                    <div class="tool-desc">Calculate symmetrical and asymmetrical fault currents</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="sequence-component-converter.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Sequence Component Converter</div>
+                    <div class="tool-desc">Convert between phase and sequence components</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="symmetrical-components.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Symmetrical Components Calculator</div>
+                    <div class="tool-desc">Analyze unbalanced systems using symmetrical components</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="distance-relay-settings.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Distance Relay Settings</div>
+                    <div class="tool-desc">Calculate reach and timing for distance protection zones</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="mho-circles-visualizer.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Mho Relay Visualizer</div>
+                    <div class="tool-desc">Visualize mho distance relay characteristics on R-X plane</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="ct-saturation-calculator.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">CT Saturation Calculator</div>
+                    <div class="tool-desc">Check current transformer saturation under fault conditions</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="tcc-curve-plotter.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">TCC Curve Plotter</div>
+                    <div class="tool-desc">Plot time-current characteristic curves for coordination</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="per-unit-converter.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Per-Unit Converter</div>
+                    <div class="tool-desc">Convert between actual and per-unit values</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="capacitor-bank-calculator.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Capacitor Bank Calculator</div>
+                    <div class="tool-desc">Size 3-phase capacitor banks for power factor correction</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="transformer-phasing-tool.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Transformer Phasing Tool</div>
+                    <div class="tool-desc">Visualize transformer winding configurations and phase shifts</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="multi-phasor-visualizer.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Multi-Phasor Visualizer</div>
+                    <div class="tool-desc">Plot and animate multiple phasors simultaneously</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="sync-scope-trainer.html" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Synchroscope Trainer</div>
+                    <div class="tool-desc">Practice generator synchronization timing</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+        </nav>
+    </div>
+</body>
+</html>

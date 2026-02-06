@@ -1,0 +1,2332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Systems Solver</title>
+    <meta name="description" content="Professional power systems engineering calculator with step-by-step solutions. Symmetrical components, phasor arithmetic, and more.">
+    <style>
+
+        /* Reset and Base */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            --success: #059669;
+            --warning: #d97706;
+            --error: #dc2626;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --border: #e2e8f0;
+            --border-dark: #cbd5e1;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            /* Phasor colors */
+            --phase-a: #dc2626;
+            --phase-b: #16a34a;
+            --phase-c: #2563eb;
+            --seq-pos: #16a34a;
+            --seq-neg: #dc2626;
+            --seq-zero: #2563eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border);
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border-dark);
+        }
+
+        /* Input Bar */
+        .input-bar-container {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 20px;
+        }
+
+        .input-bar-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .input-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 14px 18px;
+            font-size: 1.1rem;
+            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-solve {
+            padding: 14px 32px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-solve:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-solve:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        /* Symbol Palette */
+        .symbol-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .symbol-btn {
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .symbol-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .template-btn {
+            padding: 6px 14px;
+            background: var(--bg-primary);
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .palette-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+            margin: 0 4px;
+        }
+
+        /* Main Layout */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 200px 1fr 280px;
+            gap: 20px;
+            min-height: calc(100vh - 180px);
+        }
+
+        /* Navigation Sidebar */
+        .nav-sidebar {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .nav-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .nav-item.disabled {
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .nav-item.disabled:hover {
+            background: none;
+        }
+
+        .coming-soon {
+            font-size: 0.65rem;
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            color: var(--text-muted);
+        }
+
+        /* Results Area */
+        .results-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--primary-light);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        /* Results Display */
+        .result-group {
+            margin-bottom: 20px;
+        }
+
+        .result-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .result-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            gap: 16px;
+        }
+
+        .result-name {
+            font-weight: 600;
+            min-width: 50px;
+        }
+
+        .result-name.pos { color: var(--seq-pos); }
+        .result-name.neg { color: var(--seq-neg); }
+        .result-name.zero { color: var(--seq-zero); }
+        .result-name.phase-a { color: var(--phase-a); }
+        .result-name.phase-b { color: var(--phase-b); }
+        .result-name.phase-c { color: var(--phase-c); }
+
+        .result-value {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .copy-btn {
+            padding: 4px 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Step by Step */
+        .step-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--primary);
+            font-weight: 500;
+            margin-top: 16px;
+            transition: all 0.2s;
+        }
+
+        .step-toggle:hover {
+            background: var(--primary-light);
+        }
+
+        .step-toggle-icon {
+            transition: transform 0.2s;
+        }
+
+        .step-toggle.open .step-toggle-icon {
+            transform: rotate(90deg);
+        }
+
+        .step-content {
+            display: none;
+            margin-top: 16px;
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+            overflow-x: auto;
+        }
+
+        .step-content.open {
+            display: block;
+        }
+
+        .step-section {
+            margin-bottom: 24px;
+        }
+
+        .step-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .step-explanation {
+            color: var(--text-secondary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            background: var(--bg-primary);
+            border-left: 3px solid var(--primary);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        }
+
+        .matrix-display {
+            display: inline-block;
+            margin: 8px 0;
+        }
+
+        .matrix-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .matrix-cell {
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .calc-line {
+            margin: 4px 0;
+            color: var(--text-secondary);
+        }
+
+        .calc-result {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Phasor Diagram */
+        .phasor-card {
+            position: relative;
+        }
+
+        .phasor-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-btn:hover {
+            background: var(--bg-secondary);
+        }
+
+        .view-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .phasor-canvas {
+            width: 100%;
+            height: 350px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+        }
+
+        .phasor-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        /* Formula Reference Sidebar */
+        .formula-sidebar {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .formula-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .formula-collapse {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+
+        .formula-section {
+            margin-bottom: 20px;
+        }
+
+        .formula-section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .formula-box {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .formula-note {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        /* History Dropdown */
+        .history-dropdown {
+            position: relative;
+        }
+
+        .history-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 200;
+            display: none;
+        }
+
+        .history-menu.open {
+            display: block;
+        }
+
+        .history-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-clear {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+        }
+
+        .history-clear:hover {
+            background: var(--bg-tertiary);
+            color: var(--error);
+        }
+
+        .history-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-input {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .history-type {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .history-empty {
+            padding: 24px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Help Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        .modal-close:hover {
+            background: var(--bg-secondary);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .help-section {
+            margin-bottom: 24px;
+        }
+
+        .help-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .help-section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .shortcut-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .shortcut-key {
+            padding: 4px 8px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+            }
+            .header, .input-bar-container, .nav-sidebar, .formula-sidebar,
+            .btn-icon, .copy-btn, .view-btn, .step-toggle {
+                display: none !important;
+            }
+            .main-container {
+                display: block;
+                padding: 0;
+                max-width: 100%;
+            }
+            .card {
+                box-shadow: none;
+                border: 1px solid #ccc;
+                break-inside: avoid;
+            }
+            .step-content {
+                display: block !important;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1200px) {
+            .formula-sidebar {
+                display: none;
+            }
+            .main-container {
+                grid-template-columns: 180px 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            .nav-sidebar {
+                position: static;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .nav-title {
+                width: 100%;
+            }
+            .nav-item {
+                padding: 8px 12px;
+                margin: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .input-bar {
+                flex-direction: column;
+            }
+            .btn-solve {
+                width: 100%;
+            }
+            .symbol-palette {
+                justify-content: center;
+            }
+            .result-row {
+                flex-wrap: wrap;
+            }
+            .result-value {
+                width: 100%;
+                order: 2;
+            }
+        }
+
+        /* No results state */
+        .no-results {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .no-results-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .no-results-text {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .no-results-hint {
+            font-size: 0.85rem;
+        }
+
+        /* Error state */
+        .error-box {
+            padding: 16px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius-md);
+            color: var(--error);
+            font-size: 0.9rem;
+        }
+
+        /* SEL terminology tooltip */
+        .sel-tip {
+            position: relative;
+            text-decoration: underline dotted;
+            cursor: help;
+        }
+
+        .sel-tip::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 10px;
+            background: var(--text-primary);
+            color: white;
+            font-size: 0.75rem;
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .sel-tip:hover::after {
+            opacity: 1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <div class="logo-icon">&#9889;</div>
+                Power Systems Solver
+            </a>
+            <div class="header-actions">
+                <div class="history-dropdown">
+                    <button class="btn-icon" id="historyBtn" title="History">&#128337;</button>
+                    <div class="history-menu" id="historyMenu">
+                        <div class="history-header">
+                            Recent Calculations
+                            <span class="history-clear" id="historyClear">Clear All</span>
+                        </div>
+                        <div id="historyList">
+                            <div class="history-empty">No calculations yet</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-icon" id="helpBtn" title="Help (Ctrl+/)">?</button>
+                <button class="btn-icon" id="printBtn" title="Print">&#128438;</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Input Bar -->
+    <div class="input-bar-container">
+        <div class="input-bar-inner">
+            <div class="input-bar">
+                <input type="text" class="input-field" id="mainInput"
+                    placeholder="Va=277&#8736;0, Vb=277&#8736;-120, Vc=277&#8736;120"
+                    autocomplete="off">
+                <button class="btn-solve" id="solveBtn">Solve</button>
+            </div>
+            <div class="symbol-palette">
+                <button class="symbol-btn" data-insert="&#8736;">&#8736;</button>
+                <button class="symbol-btn" data-insert="&#176;">&#176;</button>
+                <button class="symbol-btn" data-insert="&#937;">&#937;</button>
+                <button class="symbol-btn" data-insert="j">j</button>
+                <button class="symbol-btn" data-insert="pu">pu</button>
+                <div class="palette-divider"></div>
+                <button class="template-btn" data-template="balanced">Balanced 3&#966;</button>
+                <button class="template-btn" data-template="slg">Typical SLG</button>
+                <button class="template-btn" data-template="unbalanced">Unbalanced</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Navigation Sidebar -->
+        <nav class="nav-sidebar">
+            <div class="nav-title">Solvers</div>
+            <div class="nav-item active" data-solver="symcomp">Symmetrical Components</div>
+            <div class="nav-item" data-solver="phasor">Phasor Arithmetic</div>
+            <div class="nav-item disabled">Per-Unit<span class="coming-soon">Soon</span></div>
+            <div class="nav-item disabled">Fault Analysis<span class="coming-soon">Soon</span></div>
+            <div class="nav-item disabled">Transformers<span class="coming-soon">Soon</span></div>
+            <div class="nav-item disabled">Power Triangle<span class="coming-soon">Soon</span></div>
+        </nav>
+
+        <!-- Results Area -->
+        <main class="results-area" id="resultsArea">
+            <div class="card">
+                <div class="no-results">
+                    <div class="no-results-icon">&#9889;</div>
+                    <div class="no-results-text">Enter values above to calculate</div>
+                    <div class="no-results-hint">Try: Va=277&#8736;0, Vb=277&#8736;-120, Vc=277&#8736;120</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Formula Reference Sidebar -->
+        <aside class="formula-sidebar" id="formulaSidebar">
+            <div class="formula-title">
+                Reference
+                <button class="formula-collapse" id="formulaCollapse">&#10005;</button>
+            </div>
+
+            <div class="formula-section">
+                <div class="formula-section-title">Symmetrical Components</div>
+                <div class="formula-box">
+[V&#8320;]       [1  1   1 ] [V&#7424;]
+[V&#8321;] = &#8531; [1  a   a&#178;] [V&#7495;]
+[V&#8322;]       [1  a&#178;  a ] [V&#7580;]
+
+a = 1&#8736;120&#176; = -0.5 + j0.866
+a&#178; = 1&#8736;240&#176; = -0.5 - j0.866
+                </div>
+                <div class="formula-note">
+                    V&#8321; = positive (ABC rotation)<br>
+                    V&#8322; = negative (ACB rotation)<br>
+                    V&#8320; = zero (in-phase)
+                </div>
+            </div>
+
+            <div class="formula-section">
+                <div class="formula-section-title">SEL Relay Values</div>
+                <div class="formula-box">
+3V&#8320; = V&#7424; + V&#7495; + V&#7580;
+3I&#8320; = I&#7424; + I&#7495; + I&#7580;
+                </div>
+                <div class="formula-note">
+                    SEL relays measure 3V0 and 3I0 directly for ground fault detection.
+                </div>
+            </div>
+
+            <div class="formula-section">
+                <div class="formula-section-title">Phasor Math</div>
+                <div class="formula-box">
+Polar: A&#8736;&#952; = A(cos&#952; + jsin&#952;)
+Rect: a + jb
+|Z| = &#8730;(a&#178; + b&#178;)
+&#952; = atan2(b, a)
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Power Systems Solver Help</div>
+                <button class="modal-close" id="helpClose">&#10005;</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <div class="help-section-title">Input Format</div>
+                    <div class="help-text">
+                        Enter phasors in polar form: <code>Va=100&#8736;0</code> or <code>Va=100&#8736;0&#176;</code><br>
+                        Or rectangular form: <code>Va=100+j0</code><br><br>
+                        For symmetrical components, enter all three phases:<br>
+                        <code>Va=277&#8736;0, Vb=277&#8736;-120, Vc=277&#8736;120</code><br><br>
+                        For phasor arithmetic:<br>
+                        <code>100&#8736;30 + 50&#8736;-45</code> or <code>(100&#8736;30) * (2&#8736;15)</code>
+                    </div>
+                </div>
+                <div class="help-section">
+                    <div class="help-section-title">Keyboard Shortcuts</div>
+                    <div class="shortcut-list">
+                        <div class="shortcut-item">
+                            <span>Solve</span>
+                            <span class="shortcut-key">Enter</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Focus input</span>
+                            <span class="shortcut-key">Tab</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Show help</span>
+                            <span class="shortcut-key">Ctrl + /</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Print</span>
+                            <span class="shortcut-key">Ctrl + P</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="help-section">
+                    <div class="help-section-title">About</div>
+                    <div class="help-text">
+                        Power Systems Solver provides step-by-step solutions for common power systems engineering calculations. All computation is done client-side - no internet required after loading.<br><br>
+                        Built for relay engineers and power systems professionals.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+// ============================================================
+// Power Systems Solver - Main JavaScript
+// ============================================================
+
+(function() {
+    'use strict';
+
+    // State
+    let currentSolver = 'symcomp';
+    let lastResults = null;
+    let phasorView = 'phase'; // 'phase' or 'sequence'
+
+    // Math constants
+    const DEG_TO_RAD = Math.PI / 180;
+    const RAD_TO_DEG = 180 / Math.PI;
+
+    // Operator a = 1∠120°
+    const A = { re: -0.5, im: Math.sqrt(3) / 2 };
+    const A2 = { re: -0.5, im: -Math.sqrt(3) / 2 };
+
+    // ============================================================
+    // Complex Number Operations
+    // ============================================================
+
+    function complex(re, im) {
+        return { re: re || 0, im: im || 0 };
+    }
+
+    function fromPolar(mag, angDeg) {
+        const angRad = angDeg * DEG_TO_RAD;
+        return { re: mag * Math.cos(angRad), im: mag * Math.sin(angRad) };
+    }
+
+    function toPolar(c) {
+        const mag = Math.sqrt(c.re * c.re + c.im * c.im);
+        const ang = Math.atan2(c.im, c.re) * RAD_TO_DEG;
+        return { mag, ang };
+    }
+
+    function cAdd(a, b) {
+        return { re: a.re + b.re, im: a.im + b.im };
+    }
+
+    function cSub(a, b) {
+        return { re: a.re - b.re, im: a.im - b.im };
+    }
+
+    function cMul(a, b) {
+        return { re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re };
+    }
+
+    function cDiv(a, b) {
+        const denom = b.re * b.re + b.im * b.im;
+        if (denom === 0) return { re: Infinity, im: Infinity };
+        return { re: (a.re * b.re + a.im * b.im) / denom, im: (a.im * b.re - a.re * b.im) / denom };
+    }
+
+    function cScale(c, s) {
+        return { re: c.re * s, im: c.im * s };
+    }
+
+    // ============================================================
+    // Input Parsing
+    // ============================================================
+
+    function parseInput(input) {
+        input = input.trim();
+
+        // Check for phasor arithmetic (has operators outside of variable assignments)
+        if (/[+\-*/](?![^=]*=)/.test(input.replace(/[+\-]?j/g, '').replace(/\d+\.?\d*/g, ''))) {
+            // Might be phasor arithmetic
+            const arithmeticResult = tryParsePhasorArithmetic(input);
+            if (arithmeticResult) return arithmeticResult;
+        }
+
+        // Try to parse as phase quantities (Va, Vb, Vc or Ia, Ib, Ic)
+        const phaseResult = tryParsePhaseQuantities(input);
+        if (phaseResult) return phaseResult;
+
+        // Try to parse as sequence quantities (V0, V1, V2 or I0, I1, I2)
+        const seqResult = tryParseSequenceQuantities(input);
+        if (seqResult) return seqResult;
+
+        // Try simple phasor arithmetic
+        const simpleArith = tryParsePhasorArithmetic(input);
+        if (simpleArith) return simpleArith;
+
+        return { type: 'error', message: 'Could not parse input. Try: Va=100∠0, Vb=100∠-120, Vc=100∠120' };
+    }
+
+    function tryParsePhaseQuantities(input) {
+        const patterns = {
+            Va: /V[aA]\s*=\s*([^,;]+)/i,
+            Vb: /V[bB]\s*=\s*([^,;]+)/i,
+            Vc: /V[cC]\s*=\s*([^,;]+)/i,
+            Ia: /I[aA]\s*=\s*([^,;]+)/i,
+            Ib: /I[bB]\s*=\s*([^,;]+)/i,
+            Ic: /I[cC]\s*=\s*([^,;]+)/i
+        };
+
+        let values = {};
+        let type = null;
+
+        for (let [key, pattern] of Object.entries(patterns)) {
+            const match = input.match(pattern);
+            if (match) {
+                const phasor = parsePhasor(match[1].trim());
+                if (phasor) {
+                    values[key] = phasor;
+                    type = key.startsWith('V') ? 'voltage' : 'current';
+                }
+            }
+        }
+
+        // Check if we have all three phases
+        if (type === 'voltage' && values.Va && values.Vb && values.Vc) {
+            return { type: 'abc_to_seq', values, valueType: 'voltage' };
+        }
+        if (type === 'current' && values.Ia && values.Ib && values.Ic) {
+            return { type: 'abc_to_seq', values, valueType: 'current' };
+        }
+
+        return null;
+    }
+
+    function tryParseSequenceQuantities(input) {
+        const patterns = {
+            V0: /V0\s*=\s*([^,;]+)/i,
+            V1: /V1\s*=\s*([^,;]+)/i,
+            V2: /V2\s*=\s*([^,;]+)/i,
+            I0: /I0\s*=\s*([^,;]+)/i,
+            I1: /I1\s*=\s*([^,;]+)/i,
+            I2: /I2\s*=\s*([^,;]+)/i
+        };
+
+        let values = {};
+        let type = null;
+
+        for (let [key, pattern] of Object.entries(patterns)) {
+            const match = input.match(pattern);
+            if (match) {
+                const phasor = parsePhasor(match[1].trim());
+                if (phasor) {
+                    values[key] = phasor;
+                    type = key.startsWith('V') ? 'voltage' : 'current';
+                }
+            }
+        }
+
+        // Check if we have all three sequences
+        if (type === 'voltage' && values.V0 && values.V1 && values.V2) {
+            return { type: 'seq_to_abc', values, valueType: 'voltage' };
+        }
+        if (type === 'current' && values.I0 && values.I1 && values.I2) {
+            return { type: 'seq_to_abc', values, valueType: 'current' };
+        }
+
+        return null;
+    }
+
+    function tryParsePhasorArithmetic(input) {
+        // Remove spaces around operators but keep spaces elsewhere
+        let expr = input.replace(/\s*([+\-*/])\s*/g, ' $1 ');
+
+        // Try to evaluate as phasor expression
+        const tokens = tokenize(expr);
+        if (tokens && tokens.length > 0) {
+            return { type: 'phasor_arithmetic', expression: input, tokens };
+        }
+        return null;
+    }
+
+    function tokenize(expr) {
+        const tokens = [];
+        let current = '';
+        let i = 0;
+
+        while (i < expr.length) {
+            const char = expr[i];
+
+            if (char === ' ') {
+                if (current.trim()) {
+                    const phasor = parsePhasor(current.trim());
+                    if (phasor) {
+                        tokens.push({ type: 'phasor', value: phasor, raw: current.trim() });
+                    }
+                    current = '';
+                }
+                i++;
+            } else if (['+', '-', '*', '/'].includes(char) && (tokens.length > 0 || current.trim())) {
+                if (current.trim()) {
+                    const phasor = parsePhasor(current.trim());
+                    if (phasor) {
+                        tokens.push({ type: 'phasor', value: phasor, raw: current.trim() });
+                    }
+                    current = '';
+                }
+                // Check if this is a sign for a number or an operator
+                if (tokens.length === 0 || tokens[tokens.length - 1].type === 'operator') {
+                    current = char;
+                } else {
+                    tokens.push({ type: 'operator', value: char });
+                }
+                i++;
+            } else if (char === '(' || char === ')') {
+                if (current.trim()) {
+                    const phasor = parsePhasor(current.trim());
+                    if (phasor) {
+                        tokens.push({ type: 'phasor', value: phasor, raw: current.trim() });
+                    }
+                    current = '';
+                }
+                tokens.push({ type: char === '(' ? 'lparen' : 'rparen' });
+                i++;
+            } else {
+                current += char;
+                i++;
+            }
+        }
+
+        if (current.trim()) {
+            const phasor = parsePhasor(current.trim());
+            if (phasor) {
+                tokens.push({ type: 'phasor', value: phasor, raw: current.trim() });
+            }
+        }
+
+        return tokens.length > 0 ? tokens : null;
+    }
+
+    function parsePhasor(str) {
+        str = str.trim().replace(/[()]/g, '');
+
+        // Polar form: 100∠30 or 100∠30° or 100<30
+        const polarMatch = str.match(/^([+-]?[\d.]+)\s*[∠<]\s*([+-]?[\d.]+)°?$/);
+        if (polarMatch) {
+            return fromPolar(parseFloat(polarMatch[1]), parseFloat(polarMatch[2]));
+        }
+
+        // Rectangular form: 100+j50 or 100-j50 or 86.6+j50
+        const rectMatch = str.match(/^([+-]?[\d.]+)\s*([+-])\s*j([\d.]+)$/i);
+        if (rectMatch) {
+            const re = parseFloat(rectMatch[1]);
+            const im = parseFloat(rectMatch[2] + rectMatch[3]);
+            return complex(re, im);
+        }
+
+        // Pure imaginary: j50 or -j50
+        const imagMatch = str.match(/^([+-])?j([\d.]+)$/i);
+        if (imagMatch) {
+            const sign = imagMatch[1] === '-' ? -1 : 1;
+            return complex(0, sign * parseFloat(imagMatch[2]));
+        }
+
+        // Pure real
+        const realMatch = str.match(/^([+-]?[\d.]+)$/);
+        if (realMatch) {
+            return complex(parseFloat(realMatch[1]), 0);
+        }
+
+        return null;
+    }
+
+    // ============================================================
+    // Calculations
+    // ============================================================
+
+    function calculateSymmetricalComponents(Va, Vb, Vc) {
+        // V0 = (Va + Vb + Vc) / 3
+        const V0 = cScale(cAdd(cAdd(Va, Vb), Vc), 1/3);
+
+        // V1 = (Va + a*Vb + a²*Vc) / 3
+        const V1 = cScale(cAdd(cAdd(Va, cMul(A, Vb)), cMul(A2, Vc)), 1/3);
+
+        // V2 = (Va + a²*Vb + a*Vc) / 3
+        const V2 = cScale(cAdd(cAdd(Va, cMul(A2, Vb)), cMul(A, Vc)), 1/3);
+
+        return { V0, V1, V2 };
+    }
+
+    function calculatePhaseFromSequence(V0, V1, V2) {
+        // Va = V0 + V1 + V2
+        const Va = cAdd(cAdd(V0, V1), V2);
+
+        // Vb = V0 + a²*V1 + a*V2
+        const Vb = cAdd(cAdd(V0, cMul(A2, V1)), cMul(A, V2));
+
+        // Vc = V0 + a*V1 + a²*V2
+        const Vc = cAdd(cAdd(V0, cMul(A, V1)), cMul(A2, V2));
+
+        return { Va, Vb, Vc };
+    }
+
+    function evaluatePhasorExpression(tokens) {
+        // Simple left-to-right evaluation with operator precedence
+        // First pass: handle * and /
+        let processed = [];
+        let i = 0;
+
+        while (i < tokens.length) {
+            if (tokens[i].type === 'phasor') {
+                processed.push(tokens[i]);
+            } else if (tokens[i].type === 'operator') {
+                if (tokens[i].value === '*' || tokens[i].value === '/') {
+                    const left = processed.pop();
+                    const right = tokens[i + 1];
+                    if (left && right && left.type === 'phasor' && right.type === 'phasor') {
+                        const result = tokens[i].value === '*'
+                            ? cMul(left.value, right.value)
+                            : cDiv(left.value, right.value);
+                        processed.push({ type: 'phasor', value: result, raw: 'intermediate' });
+                        i++; // Skip the right operand
+                    }
+                } else {
+                    processed.push(tokens[i]);
+                }
+            }
+            i++;
+        }
+
+        // Second pass: handle + and -
+        if (processed.length === 0) return null;
+
+        let result = processed[0].value;
+        i = 1;
+
+        while (i < processed.length) {
+            if (processed[i].type === 'operator' && i + 1 < processed.length) {
+                const right = processed[i + 1].value;
+                if (processed[i].value === '+') {
+                    result = cAdd(result, right);
+                } else if (processed[i].value === '-') {
+                    result = cSub(result, right);
+                }
+                i += 2;
+            } else {
+                i++;
+            }
+        }
+
+        return result;
+    }
+
+    // ============================================================
+    // Formatting
+    // ============================================================
+
+    function formatComplex(c, decimals = 4) {
+        const sign = c.im >= 0 ? '+' : '-';
+        return `${c.re.toFixed(decimals)} ${sign} j${Math.abs(c.im).toFixed(decimals)}`;
+    }
+
+    function formatPolar(c, decimals = 4) {
+        const p = toPolar(c);
+        return `${p.mag.toFixed(decimals)} ∠ ${p.ang.toFixed(2)}°`;
+    }
+
+    function formatBoth(c, decimals = 4) {
+        return `${formatPolar(c, decimals)}  =  ${formatComplex(c, decimals)}`;
+    }
+
+    // ============================================================
+    // Results Rendering
+    // ============================================================
+
+    function solve() {
+        const input = document.getElementById('mainInput').value.trim();
+        if (!input) return;
+
+        const parsed = parseInput(input);
+
+        if (parsed.type === 'error') {
+            showError(parsed.message);
+            return;
+        }
+
+        let results;
+
+        if (parsed.type === 'abc_to_seq') {
+            results = solveABCtoSequence(parsed);
+        } else if (parsed.type === 'seq_to_abc') {
+            results = solveSequenceToABC(parsed);
+        } else if (parsed.type === 'phasor_arithmetic') {
+            results = solvePhasorArithmetic(parsed);
+        }
+
+        if (results) {
+            lastResults = results;
+            renderResults(results);
+            addToHistory(input, results.type);
+        }
+    }
+
+    function solveABCtoSequence(parsed) {
+        const prefix = parsed.valueType === 'voltage' ? 'V' : 'I';
+        const Va = parsed.values[prefix + 'a'];
+        const Vb = parsed.values[prefix + 'b'];
+        const Vc = parsed.values[prefix + 'c'];
+
+        const seq = calculateSymmetricalComponents(Va, Vb, Vc);
+
+        // Calculate 3V0/3I0 (what SEL relays measure)
+        const threeV0 = cAdd(cAdd(Va, Vb), Vc);
+
+        return {
+            type: 'abc_to_seq',
+            valueType: parsed.valueType,
+            input: { Va, Vb, Vc },
+            output: seq,
+            threeV0: threeV0,
+            prefix
+        };
+    }
+
+    function solveSequenceToABC(parsed) {
+        const prefix = parsed.valueType === 'voltage' ? 'V' : 'I';
+        const V0 = parsed.values[prefix + '0'];
+        const V1 = parsed.values[prefix + '1'];
+        const V2 = parsed.values[prefix + '2'];
+
+        const abc = calculatePhaseFromSequence(V0, V1, V2);
+
+        return {
+            type: 'seq_to_abc',
+            valueType: parsed.valueType,
+            input: { V0, V1, V2 },
+            output: abc,
+            prefix
+        };
+    }
+
+    function solvePhasorArithmetic(parsed) {
+        const result = evaluatePhasorExpression(parsed.tokens);
+
+        if (!result) {
+            return null;
+        }
+
+        return {
+            type: 'phasor_arithmetic',
+            expression: parsed.expression,
+            tokens: parsed.tokens,
+            result: result
+        };
+    }
+
+    function renderResults(results) {
+        const area = document.getElementById('resultsArea');
+
+        if (results.type === 'abc_to_seq') {
+            area.innerHTML = renderABCtoSeqResults(results);
+        } else if (results.type === 'seq_to_abc') {
+            area.innerHTML = renderSeqToABCResults(results);
+        } else if (results.type === 'phasor_arithmetic') {
+            area.innerHTML = renderPhasorArithmeticResults(results);
+        }
+
+        // Re-attach event listeners
+        attachResultEventListeners();
+
+        // Draw phasor diagram
+        if (results.type === 'abc_to_seq' || results.type === 'seq_to_abc') {
+            drawPhasorDiagram(results);
+        }
+    }
+
+    function renderABCtoSeqResults(results) {
+        const p = results.prefix;
+        const Va = results.input.Va;
+        const Vb = results.input.Vb;
+        const Vc = results.input.Vc;
+        const V0 = results.output.V0;
+        const V1 = results.output.V1;
+        const V2 = results.output.V2;
+        const threeV0 = results.threeV0;
+
+        return `
+            <div class="card">
+                <div class="card-title">
+                    <div class="card-title-icon">&#9889;</div>
+                    Sequence Components
+                </div>
+
+                <div class="result-group">
+                    <div class="result-row">
+                        <span class="result-name pos">${p}₁</span>
+                        <span class="result-value">${formatBoth(V1)}</span>
+                        <div class="result-actions">
+                            <button class="copy-btn" data-copy="${formatPolar(V1)}">Copy</button>
+                        </div>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-name neg">${p}₂</span>
+                        <span class="result-value">${formatBoth(V2)}</span>
+                        <div class="result-actions">
+                            <button class="copy-btn" data-copy="${formatPolar(V2)}">Copy</button>
+                        </div>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-name zero">${p}₀</span>
+                        <span class="result-value">${formatBoth(V0)}</span>
+                        <div class="result-actions">
+                            <button class="copy-btn" data-copy="${formatPolar(V0)}">Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-group">
+                    <div class="result-label"><span class="sel-tip" data-tip="What SEL relays measure directly">SEL Relay Value</span></div>
+                    <div class="result-row">
+                        <span class="result-name zero">3${p}₀</span>
+                        <span class="result-value">${formatBoth(threeV0)}</span>
+                        <div class="result-actions">
+                            <button class="copy-btn" data-copy="${formatPolar(threeV0)}">Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-toggle" id="stepToggle">
+                    <span class="step-toggle-icon">▶</span>
+                    Show Step-by-Step Solution
+                </div>
+                <div class="step-content" id="stepContent">
+                    ${generateABCtoSeqSteps(results)}
+                </div>
+            </div>
+
+            <div class="card phasor-card">
+                <div class="card-title">
+                    <div class="card-title-icon">⟲</div>
+                    Phasor Diagram
+                </div>
+                <div class="phasor-controls">
+                    <button class="view-btn active" data-view="phase">Phase Domain</button>
+                    <button class="view-btn" data-view="sequence">Sequence Domain</button>
+                    <button class="view-btn" data-view="both">Both</button>
+                </div>
+                <canvas class="phasor-canvas" id="phasorCanvas"></canvas>
+                <div class="phasor-legend">
+                    <div class="legend-item"><div class="legend-color" style="background: var(--phase-a)"></div>Phase A</div>
+                    <div class="legend-item"><div class="legend-color" style="background: var(--phase-b)"></div>Phase B</div>
+                    <div class="legend-item"><div class="legend-color" style="background: var(--phase-c)"></div>Phase C</div>
+                    <div class="legend-item"><div class="legend-color" style="background: var(--seq-pos)"></div>${p}₁ (pos)</div>
+                    <div class="legend-item"><div class="legend-color" style="background: var(--seq-neg)"></div>${p}₂ (neg)</div>
+                    <div class="legend-item"><div class="legend-color" style="background: var(--seq-zero)"></div>${p}₀ (zero)</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderSeqToABCResults(results) {
+        const p = results.prefix;
+        const V0 = results.input.V0;
+        const V1 = results.input.V1;
+        const V2 = results.input.V2;
+        const Va = results.output.Va;
+        const Vb = results.output.Vb;
+        const Vc = results.output.Vc;
+
+        return `
+            <div class="card">
+                <div class="card-title">
+                    <div class="card-title-icon">&#9889;</div>
+                    Phase Quantities
+                </div>
+
+                <div class="result-group">
+                    <div class="result-row">
+                        <span class="result-name phase-a">${p}ₐ</span>
+                        <span class="result-value">${formatBoth(Va)}</span>
+                        <div class="result-actions">
+                            <button class="copy-btn" data-copy="${formatPolar(Va)}">Copy</button>
+                        </div>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-name phase-b">${p}ᵦ</span>
+                        <span class="result-value">${formatBoth(Vb)}</span>
+                        <div class="result-actions">
+                            <button class="copy-btn" data-copy="${formatPolar(Vb)}">Copy</button>
+                        </div>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-name phase-c">${p}ᶜ</span>
+                        <span class="result-value">${formatBoth(Vc)}</span>
+                        <div class="result-actions">
+                            <button class="copy-btn" data-copy="${formatPolar(Vc)}">Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-toggle" id="stepToggle">
+                    <span class="step-toggle-icon">▶</span>
+                    Show Step-by-Step Solution
+                </div>
+                <div class="step-content" id="stepContent">
+                    ${generateSeqToABCSteps(results)}
+                </div>
+            </div>
+
+            <div class="card phasor-card">
+                <div class="card-title">
+                    <div class="card-title-icon">⟲</div>
+                    Phasor Diagram
+                </div>
+                <div class="phasor-controls">
+                    <button class="view-btn active" data-view="phase">Phase Domain</button>
+                    <button class="view-btn" data-view="sequence">Sequence Domain</button>
+                    <button class="view-btn" data-view="both">Both</button>
+                </div>
+                <canvas class="phasor-canvas" id="phasorCanvas"></canvas>
+                <div class="phasor-legend">
+                    <div class="legend-item"><div class="legend-color" style="background: var(--phase-a)"></div>Phase A</div>
+                    <div class="legend-item"><div class="legend-color" style="background: var(--phase-b)"></div>Phase B</div>
+                    <div class="legend-item"><div class="legend-color" style="background: var(--phase-c)"></div>Phase C</div>
+                    <div class="legend-item"><div class="legend-color" style="background: var(--seq-pos)"></div>${p}₁ (pos)</div>
+                    <div class="legend-item"><div class="legend-color" style="background: var(--seq-neg)"></div>${p}₂ (neg)</div>
+                    <div class="legend-item"><div class="legend-color" style="background: var(--seq-zero)"></div>${p}₀ (zero)</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderPhasorArithmeticResults(results) {
+        return `
+            <div class="card">
+                <div class="card-title">
+                    <div class="card-title-icon">&#128290;</div>
+                    Phasor Arithmetic Result
+                </div>
+
+                <div class="result-group">
+                    <div class="result-label">Expression</div>
+                    <div class="result-row">
+                        <span class="result-value" style="font-size: 1rem;">${results.expression}</span>
+                    </div>
+                </div>
+
+                <div class="result-group">
+                    <div class="result-label">Result</div>
+                    <div class="result-row">
+                        <span class="result-name" style="color: var(--primary);">R</span>
+                        <span class="result-value">${formatBoth(results.result)}</span>
+                        <div class="result-actions">
+                            <button class="copy-btn" data-copy="${formatPolar(results.result)}">Polar</button>
+                            <button class="copy-btn" data-copy="${formatComplex(results.result)}">Rect</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-toggle" id="stepToggle">
+                    <span class="step-toggle-icon">▶</span>
+                    Show Step-by-Step Solution
+                </div>
+                <div class="step-content" id="stepContent">
+                    ${generatePhasorArithmeticSteps(results)}
+                </div>
+            </div>
+        `;
+    }
+
+    // ============================================================
+    // Step-by-Step Generation
+    // ============================================================
+
+    function generateABCtoSeqSteps(results) {
+        const p = results.prefix;
+        const Va = results.input.Va;
+        const Vb = results.input.Vb;
+        const Vc = results.input.Vc;
+        const V0 = results.output.V0;
+        const V1 = results.output.V1;
+        const V2 = results.output.V2;
+
+        return `
+            <div class="step-section">
+                <div class="step-title">Step 1: Define the Input Phasors</div>
+                <div class="step-explanation">
+                    We start with the three-phase quantities measured in the field (phase domain).
+                </div>
+                <div class="calc-line">${p}ₐ = ${formatPolar(Va)} = ${formatComplex(Va)}</div>
+                <div class="calc-line">${p}ᵦ = ${formatPolar(Vb)} = ${formatComplex(Vb)}</div>
+                <div class="calc-line">${p}ᶜ = ${formatPolar(Vc)} = ${formatComplex(Vc)}</div>
+            </div>
+
+            <div class="step-section">
+                <div class="step-title">Step 2: Define the Operator a</div>
+                <div class="step-explanation">
+                    The operator 'a' is the fundamental building block of symmetrical component analysis.
+                    It represents a 120° phase shift.
+                </div>
+                <div class="calc-line">a = 1∠120° = ${formatComplex(A)}</div>
+                <div class="calc-line">a² = 1∠240° = ${formatComplex(A2)}</div>
+                <div class="calc-line">Note: a³ = 1 (rotating 360° returns to start)</div>
+            </div>
+
+            <div class="step-section">
+                <div class="step-title">Step 3: Apply the Transformation Matrix</div>
+                <div class="step-explanation">
+                    We decompose the unbalanced phasors into three balanced sets using the [A] matrix.
+                    Each sequence component has a physical meaning in the power system.
+                </div>
+                <div class="matrix-display">
+                    <div class="calc-line">[${p}₀]       [1  1   1 ] [${p}ₐ]</div>
+                    <div class="calc-line">[${p}₁] = ⅓ × [1  a   a²] [${p}ᵦ]</div>
+                    <div class="calc-line">[${p}₂]       [1  a²  a ] [${p}ᶜ]</div>
+                </div>
+            </div>
+
+            <div class="step-section">
+                <div class="step-title">Step 4: Calculate Zero Sequence (${p}₀)</div>
+                <div class="step-explanation">
+                    Zero sequence represents components that are in-phase with each other.
+                    In a balanced system, they sum to zero. Non-zero V₀ indicates ground current path.
+                </div>
+                <div class="calc-line">${p}₀ = (${p}ₐ + ${p}ᵦ + ${p}ᶜ) / 3</div>
+                <div class="calc-line">${p}₀ = (${formatComplex(Va)} + ${formatComplex(Vb)} + ${formatComplex(Vc)}) / 3</div>
+                <div class="calc-line">${p}₀ = ${formatComplex(cAdd(cAdd(Va, Vb), Vc))} / 3</div>
+                <div class="calc-line calc-result">${p}₀ = ${formatBoth(V0)}</div>
+            </div>
+
+            <div class="step-section">
+                <div class="step-title">Step 5: Calculate Positive Sequence (${p}₁)</div>
+                <div class="step-explanation">
+                    Positive sequence represents the balanced ABC rotation (forward-rotating component).
+                    This is what motors and generators are designed to operate on.
+                </div>
+                <div class="calc-line">${p}₁ = (${p}ₐ + a×${p}ᵦ + a²×${p}ᶜ) / 3</div>
+                <div class="calc-line">a×${p}ᵦ = ${formatComplex(A)} × ${formatComplex(Vb)} = ${formatComplex(cMul(A, Vb))}</div>
+                <div class="calc-line">a²×${p}ᶜ = ${formatComplex(A2)} × ${formatComplex(Vc)} = ${formatComplex(cMul(A2, Vc))}</div>
+                <div class="calc-line">${p}₁ = (${formatComplex(Va)} + ${formatComplex(cMul(A, Vb))} + ${formatComplex(cMul(A2, Vc))}) / 3</div>
+                <div class="calc-line calc-result">${p}₁ = ${formatBoth(V1)}</div>
+            </div>
+
+            <div class="step-section">
+                <div class="step-title">Step 6: Calculate Negative Sequence (${p}₂)</div>
+                <div class="step-explanation">
+                    Negative sequence represents the ACB rotation (reverse-rotating component).
+                    It causes heating in motors and indicates system unbalance.
+                </div>
+                <div class="calc-line">${p}₂ = (${p}ₐ + a²×${p}ᵦ + a×${p}ᶜ) / 3</div>
+                <div class="calc-line">a²×${p}ᵦ = ${formatComplex(A2)} × ${formatComplex(Vb)} = ${formatComplex(cMul(A2, Vb))}</div>
+                <div class="calc-line">a×${p}ᶜ = ${formatComplex(A)} × ${formatComplex(Vc)} = ${formatComplex(cMul(A, Vc))}</div>
+                <div class="calc-line">${p}₂ = (${formatComplex(Va)} + ${formatComplex(cMul(A2, Vb))} + ${formatComplex(cMul(A, Vc))}) / 3</div>
+                <div class="calc-line calc-result">${p}₂ = ${formatBoth(V2)}</div>
+            </div>
+
+            <div class="step-section">
+                <div class="step-title">Step 7: SEL Relay Value (3${p}₀)</div>
+                <div class="step-explanation">
+                    SEL relays measure 3V₀ and 3I₀ directly (the residual) rather than computing V₀/I₀.
+                    This is simply the sum of the three phase quantities.
+                </div>
+                <div class="calc-line">3${p}₀ = ${p}ₐ + ${p}ᵦ + ${p}ᶜ</div>
+                <div class="calc-line calc-result">3${p}₀ = ${formatBoth(results.threeV0)}</div>
+            </div>
+        `;
+    }
+
+    function generateSeqToABCSteps(results) {
+        const p = results.prefix;
+        const V0 = results.input.V0;
+        const V1 = results.input.V1;
+        const V2 = results.input.V2;
+        const Va = results.output.Va;
+        const Vb = results.output.Vb;
+        const Vc = results.output.Vc;
+
+        return `
+            <div class="step-section">
+                <div class="step-title">Step 1: Define the Sequence Components</div>
+                <div class="step-explanation">
+                    We start with the sequence components (typically from fault analysis or relay data).
+                </div>
+                <div class="calc-line">${p}₀ = ${formatPolar(V0)} = ${formatComplex(V0)}</div>
+                <div class="calc-line">${p}₁ = ${formatPolar(V1)} = ${formatComplex(V1)}</div>
+                <div class="calc-line">${p}₂ = ${formatPolar(V2)} = ${formatComplex(V2)}</div>
+            </div>
+
+            <div class="step-section">
+                <div class="step-title">Step 2: Apply the Inverse Transformation</div>
+                <div class="step-explanation">
+                    We recombine the sequence components back into phase quantities using the inverse [A]⁻¹ matrix.
+                </div>
+                <div class="matrix-display">
+                    <div class="calc-line">[${p}ₐ]   [1  1   1 ] [${p}₀]</div>
+                    <div class="calc-line">[${p}ᵦ] = [1  a²  a ] [${p}₁]</div>
+                    <div class="calc-line">[${p}ᶜ]   [1  a   a²] [${p}₂]</div>
+                </div>
+            </div>
+
+            <div class="step-section">
+                <div class="step-title">Step 3: Calculate Phase A</div>
+                <div class="calc-line">${p}ₐ = ${p}₀ + ${p}₁ + ${p}₂</div>
+                <div class="calc-line">${p}ₐ = ${formatComplex(V0)} + ${formatComplex(V1)} + ${formatComplex(V2)}</div>
+                <div class="calc-line calc-result">${p}ₐ = ${formatBoth(Va)}</div>
+            </div>
+
+            <div class="step-section">
+                <div class="step-title">Step 4: Calculate Phase B</div>
+                <div class="calc-line">${p}ᵦ = ${p}₀ + a²×${p}₁ + a×${p}₂</div>
+                <div class="calc-line">a²×${p}₁ = ${formatComplex(cMul(A2, V1))}</div>
+                <div class="calc-line">a×${p}₂ = ${formatComplex(cMul(A, V2))}</div>
+                <div class="calc-line calc-result">${p}ᵦ = ${formatBoth(Vb)}</div>
+            </div>
+
+            <div class="step-section">
+                <div class="step-title">Step 5: Calculate Phase C</div>
+                <div class="calc-line">${p}ᶜ = ${p}₀ + a×${p}₁ + a²×${p}₂</div>
+                <div class="calc-line">a×${p}₁ = ${formatComplex(cMul(A, V1))}</div>
+                <div class="calc-line">a²×${p}₂ = ${formatComplex(cMul(A2, V2))}</div>
+                <div class="calc-line calc-result">${p}ᶜ = ${formatBoth(Vc)}</div>
+            </div>
+        `;
+    }
+
+    function generatePhasorArithmeticSteps(results) {
+        let steps = '<div class="step-section"><div class="step-title">Step 1: Parse Input Phasors</div>';
+
+        results.tokens.filter(t => t.type === 'phasor').forEach((token, i) => {
+            if (token.raw !== 'intermediate') {
+                const p = toPolar(token.value);
+                steps += `<div class="calc-line">Phasor ${i + 1}: ${token.raw} = ${formatComplex(token.value)}</div>`;
+            }
+        });
+
+        steps += '</div>';
+
+        steps += `
+            <div class="step-section">
+                <div class="step-title">Step 2: Evaluate Expression</div>
+                <div class="calc-line">${results.expression}</div>
+                <div class="calc-line calc-result">= ${formatBoth(results.result)}</div>
+            </div>
+        `;
+
+        return steps;
+    }
+
+    // ============================================================
+    // Phasor Diagram Drawing
+    // ============================================================
+
+    function drawPhasorDiagram(results) {
+        const canvas = document.getElementById('phasorCanvas');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.getBoundingClientRect();
+
+        // Set actual pixel dimensions
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+        const w = rect.width;
+        const h = rect.height;
+        const cx = w / 2;
+        const cy = h / 2;
+
+        // Clear
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+
+        // Get phasors to draw
+        let phasors = [];
+        let Va, Vb, Vc, V0, V1, V2;
+
+        if (results.type === 'abc_to_seq') {
+            Va = results.input.Va;
+            Vb = results.input.Vb;
+            Vc = results.input.Vc;
+            V0 = results.output.V0;
+            V1 = results.output.V1;
+            V2 = results.output.V2;
+        } else {
+            Va = results.output.Va;
+            Vb = results.output.Vb;
+            Vc = results.output.Vc;
+            V0 = results.input.V0;
+            V1 = results.input.V1;
+            V2 = results.input.V2;
+        }
+
+        // Find max magnitude for scaling
+        const allPhasors = [Va, Vb, Vc, V0, V1, V2];
+        const mags = allPhasors.map(p => Math.sqrt(p.re * p.re + p.im * p.im));
+        const maxMag = Math.max(...mags, 1);
+        const scale = (Math.min(w, h) / 2 - 50) / maxMag;
+
+        // Draw grid
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+
+        // Concentric circles
+        for (let i = 1; i <= 4; i++) {
+            const r = scale * maxMag * i / 4;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+
+        // Axes
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, cy);
+        ctx.lineTo(w, cy);
+        ctx.moveTo(cx, 0);
+        ctx.lineTo(cx, h);
+        ctx.stroke();
+
+        // Labels for axes
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px sans-serif';
+        ctx.fillText('+Re', w - 25, cy - 5);
+        ctx.fillText('+jIm', cx + 5, 15);
+
+        // Scale label
+        ctx.fillText(maxMag.toFixed(1), cx + scale * maxMag / 2 - 15, cy + 15);
+
+        // Draw function
+        function drawArrow(phasor, color, label, dashed = false) {
+            const x = cx + phasor.re * scale;
+            const y = cy - phasor.im * scale;  // Flip y for canvas coords
+            const mag = Math.sqrt(phasor.re * phasor.re + phasor.im * phasor.im);
+
+            if (mag < 0.01) return;  // Skip tiny phasors
+
+            const angle = Math.atan2(-phasor.im, phasor.re);
+            const headLen = 10;
+
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2;
+
+            if (dashed) {
+                ctx.setLineDash([6, 4]);
+            } else {
+                ctx.setLineDash([]);
+            }
+
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+
+            // Draw arrowhead
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - headLen * Math.cos(angle - Math.PI / 6), y + headLen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x - headLen * Math.cos(angle + Math.PI / 6), y + headLen * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw label
+            const labelOffset = 15;
+            const labelX = x + labelOffset * Math.cos(angle);
+            const labelY = y - labelOffset * Math.sin(angle);
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText(label, labelX - 8, labelY + 4);
+        }
+
+        // Draw based on view mode
+        const showPhase = phasorView === 'phase' || phasorView === 'both';
+        const showSeq = phasorView === 'sequence' || phasorView === 'both';
+
+        if (showPhase) {
+            drawArrow(Va, '#dc2626', 'A');
+            drawArrow(Vb, '#16a34a', 'B');
+            drawArrow(Vc, '#2563eb', 'C');
+        }
+
+        if (showSeq) {
+            drawArrow(V1, '#16a34a', '1', true);
+            drawArrow(V2, '#dc2626', '2', true);
+            drawArrow(V0, '#2563eb', '0', true);
+        }
+    }
+
+    // ============================================================
+    // History Management
+    // ============================================================
+
+    function addToHistory(input, type) {
+        let history = JSON.parse(sessionStorage.getItem('pssHistory') || '[]');
+
+        // Remove duplicate if exists
+        history = history.filter(h => h.input !== input);
+
+        // Add to front
+        history.unshift({
+            input,
+            type,
+            timestamp: Date.now()
+        });
+
+        // Keep only last 20
+        history = history.slice(0, 20);
+
+        sessionStorage.setItem('pssHistory', JSON.stringify(history));
+        updateHistoryUI();
+    }
+
+    function updateHistoryUI() {
+        const history = JSON.parse(sessionStorage.getItem('pssHistory') || '[]');
+        const container = document.getElementById('historyList');
+
+        if (history.length === 0) {
+            container.innerHTML = '<div class="history-empty">No calculations yet</div>';
+            return;
+        }
+
+        container.innerHTML = history.map(h => `
+            <div class="history-item" data-input="${h.input.replace(/"/g, '&quot;')}">
+                <div class="history-input">${h.input}</div>
+                <div class="history-type">${h.type.replace(/_/g, ' ')}</div>
+            </div>
+        `).join('');
+
+        // Attach click handlers
+        container.querySelectorAll('.history-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.getElementById('mainInput').value = item.dataset.input;
+                document.getElementById('historyMenu').classList.remove('open');
+                solve();
+            });
+        });
+    }
+
+    function clearHistory() {
+        sessionStorage.removeItem('pssHistory');
+        updateHistoryUI();
+    }
+
+    // ============================================================
+    // Event Handlers
+    // ============================================================
+
+    function attachResultEventListeners() {
+        // Step toggle
+        const stepToggle = document.getElementById('stepToggle');
+        const stepContent = document.getElementById('stepContent');
+        if (stepToggle && stepContent) {
+            stepToggle.addEventListener('click', () => {
+                stepToggle.classList.toggle('open');
+                stepContent.classList.toggle('open');
+            });
+        }
+
+        // Copy buttons
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                navigator.clipboard.writeText(btn.dataset.copy);
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = originalText, 1000);
+            });
+        });
+
+        // View buttons for phasor diagram
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                phasorView = btn.dataset.view;
+                if (lastResults) {
+                    drawPhasorDiagram(lastResults);
+                }
+            });
+        });
+    }
+
+    function showError(message) {
+        document.getElementById('resultsArea').innerHTML = `
+            <div class="card">
+                <div class="error-box">
+                    <strong>Error:</strong> ${message}
+                </div>
+            </div>
+        `;
+    }
+
+    // ============================================================
+    // Templates
+    // ============================================================
+
+    const templates = {
+        balanced: 'Va=277∠0, Vb=277∠-120, Vc=277∠120',
+        slg: 'Va=0∠0, Vb=277∠-120, Vc=277∠120',
+        unbalanced: 'Va=100∠0, Vb=80∠-130, Vc=90∠110'
+    };
+
+    // ============================================================
+    // Initialization
+    // ============================================================
+
+    function init() {
+        // Main input and solve
+        const mainInput = document.getElementById('mainInput');
+        const solveBtn = document.getElementById('solveBtn');
+
+        mainInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                solve();
+            }
+        });
+
+        solveBtn.addEventListener('click', solve);
+
+        // Symbol buttons
+        document.querySelectorAll('.symbol-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const input = document.getElementById('mainInput');
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                const text = input.value;
+                const symbol = btn.dataset.insert;
+                input.value = text.substring(0, start) + symbol + text.substring(end);
+                input.selectionStart = input.selectionEnd = start + symbol.length;
+                input.focus();
+            });
+        });
+
+        // Template buttons
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('mainInput').value = templates[btn.dataset.template];
+                solve();
+            });
+        });
+
+        // Nav items
+        document.querySelectorAll('.nav-item:not(.disabled)').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                currentSolver = item.dataset.solver;
+            });
+        });
+
+        // History dropdown
+        const historyBtn = document.getElementById('historyBtn');
+        const historyMenu = document.getElementById('historyMenu');
+
+        historyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            historyMenu.classList.toggle('open');
+        });
+
+        document.getElementById('historyClear').addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearHistory();
+        });
+
+        document.addEventListener('click', () => {
+            historyMenu.classList.remove('open');
+        });
+
+        // Help modal
+        const helpBtn = document.getElementById('helpBtn');
+        const helpModal = document.getElementById('helpModal');
+        const helpClose = document.getElementById('helpClose');
+
+        helpBtn.addEventListener('click', () => helpModal.classList.add('open'));
+        helpClose.addEventListener('click', () => helpModal.classList.remove('open'));
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) helpModal.classList.remove('open');
+        });
+
+        // Print button
+        document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+        // Formula sidebar collapse
+        document.getElementById('formulaCollapse').addEventListener('click', () => {
+            document.getElementById('formulaSidebar').style.display = 'none';
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === '/') {
+                e.preventDefault();
+                helpModal.classList.toggle('open');
+            }
+        });
+
+        // Initialize history UI
+        updateHistoryUI();
+
+        // Handle window resize for phasor diagram
+        window.addEventListener('resize', () => {
+            if (lastResults && (lastResults.type === 'abc_to_seq' || lastResults.type === 'seq_to_abc')) {
+                drawPhasorDiagram(lastResults);
+            }
+        });
+    }
+
+    // Start
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+})();
+
+    </script>
+</body>
+</html>

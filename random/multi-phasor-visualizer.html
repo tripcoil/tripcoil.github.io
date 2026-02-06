@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Phasor Visualizer</title>
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2, h3, h4 {
+            color: #e2e8f0;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        h3 {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button.secondary {
+            background: #334155;
+            border: 1px solid #475569;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .unit {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-left: 4px;
+        }
+
+        .results {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .results .value {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .results .success {
+            color: #10b981;
+        }
+
+        .results .warning {
+            color: #f59e0b;
+        }
+
+        .results .error {
+            color: #ef4444;
+        }
+
+        .show-work {
+            margin-top: 16px;
+        }
+
+        .show-work summary {
+            cursor: pointer;
+            color: #3b82f6;
+            font-size: 0.875rem;
+            padding: 8px 0;
+        }
+
+        .show-work summary:hover {
+            text-decoration: underline;
+        }
+
+        .show-work-content {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+        }
+
+        canvas {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            display: block;
+            max-width: 100%;
+        }
+
+        .canvas-container {
+            position: relative;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 1px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+
+        .back-link:hover {
+            color: #3b82f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #475569;
+        }
+
+        th {
+            background: #0f172a;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .card {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            .results, .show-work-content {
+                background: #f5f5f5;
+                border: 1px solid #ccc;
+            }
+            canvas {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            button, .back-link {
+                display: none;
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .input-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    
+        .phasor-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+            padding: 12px;
+            background: #0f172a;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .phasor-row input[type="range"] {
+            width: 100%;
+            background: transparent;
+        }
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+        .slider-value {
+            font-family: 'Consolas', monospace;
+            color: #3b82f6;
+        }
+        .remove-btn {
+            background: #ef4444;
+            padding: 8px 12px;
+            font-size: 1rem;
+        }
+        .remove-btn:hover {
+            background: #dc2626;
+        }
+        .canvas-row {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (max-width: 900px) {
+            .canvas-row {
+                grid-template-columns: 1fr;
+            }
+            .phasor-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Tools</a>
+        <h1>Multi-Phasor Visualizer</h1>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2>Phasors</h2>
+                <button id="addPhasor">+ Add Phasor</button>
+            </div>
+            <div id="phasorControls"></div>
+        </div>
+
+        <div class="canvas-row">
+            <div class="card">
+                <h2>Phasor Diagram</h2>
+                <canvas id="phasorCanvas" width="400" height="400"></canvas>
+                <div class="legend" id="phasorLegend"></div>
+            </div>
+            <div class="card">
+                <h2>Time Domain</h2>
+                <canvas id="timeCanvas" width="600" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        function validateNumber(value, min, max, fieldName) {
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+                return { valid: false, error: `${fieldName} must be a valid number` };
+            }
+            if (min !== null && num < min) {
+                return { valid: false, error: `${fieldName} must be >= ${min}` };
+            }
+            if (max !== null && num > max) {
+                return { valid: false, error: `${fieldName} must be <= ${max}` };
+            }
+            return { valid: true, value: num };
+        }
+
+        function validatePositive(value, fieldName) {
+            const result = validateNumber(value, 0.0001, null, fieldName);
+            if (!result.valid) return result;
+            if (result.value <= 0) {
+                return { valid: false, error: `${fieldName} must be positive` };
+            }
+            return result;
+        }
+
+        function validateNonNegative(value, fieldName) {
+            return validateNumber(value, 0, null, fieldName);
+        }
+
+        function showError(message) {
+            alert('Input Error: ' + message);
+        }
+
+        function formatEngineering(value, decimals = 4) {
+            if (Math.abs(value) === 0) return '0';
+            if (Math.abs(value) >= 1e6) return (value / 1e6).toFixed(decimals) + ' M';
+            if (Math.abs(value) >= 1e3) return (value / 1e3).toFixed(decimals) + ' k';
+            if (Math.abs(value) >= 1) return value.toFixed(decimals);
+            if (Math.abs(value) >= 1e-3) return (value * 1e3).toFixed(decimals) + ' m';
+            if (Math.abs(value) >= 1e-6) return (value * 1e6).toFixed(decimals) + ' μ';
+            return value.toExponential(decimals);
+        }
+
+        function formatAngle(degrees) {
+            return degrees.toFixed(2) + '°';
+        }
+
+        function formatComplex(re, im, decimals = 4) {
+            const sign = im >= 0 ? '+' : '-';
+            return `${re.toFixed(decimals)} ${sign} j${Math.abs(im).toFixed(decimals)}`;
+        }
+
+        function formatPolar(mag, angDeg, decimals = 4) {
+            return `${mag.toFixed(decimals)} ∠ ${angDeg.toFixed(2)}°`;
+        }
+    
+        const COLORS = ['#ef4444','#22c55e','#3b82f6','#f59e0b',
+                        '#8b5cf6','#06b6d4','#ec4899','#84cc16'];
+
+        let phasors = [];
+        let nextId = 0;
+
+        const pC = document.getElementById('phasorCanvas');
+        const pCtx = pC.getContext('2d');
+        const tC = document.getElementById('timeCanvas');
+        const tCtx = tC.getContext('2d');
+        const maxSamples = tC.width;
+
+        function addPhasor() {
+            const id = nextId++;
+            const color = COLORS[id % COLORS.length];
+            const row = document.createElement('div');
+            row.className = 'phasor-row';
+            row.dataset.id = id;
+
+            row.innerHTML = `
+                <div class="slider-group">
+                    <div class="slider-label"><span>Magnitude</span><span class="slider-value" data-val="mag">5.0</span></div>
+                    <input type="range" min="0" max="10" step="0.1" value="5" data-prop="mag">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label"><span>Frequency (Hz)</span><span class="slider-value" data-val="freq">1.0</span></div>
+                    <input type="range" min="0.1" max="10" step="0.1" value="1" data-prop="freq">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label"><span>Phase (°)</span><span class="slider-value" data-val="phase">0</span></div>
+                    <input type="range" min="-180" max="180" step="1" value="0" data-prop="phase">
+                </div>
+                <button class="remove-btn" data-remove>✕</button>
+            `;
+            document.getElementById('phasorControls').append(row);
+
+            const sliders = {
+                mag: row.querySelector('input[data-prop="mag"]'),
+                freq: row.querySelector('input[data-prop="freq"]'),
+                phase: row.querySelector('input[data-prop="phase"]'),
+            };
+            const valSpans = {
+                mag: row.querySelector('[data-val="mag"]'),
+                freq: row.querySelector('[data-val="freq"]'),
+                phase: row.querySelector('[data-val="phase"]'),
+            };
+            const removeBtn = row.querySelector('button[data-remove]');
+
+            const ph = {
+                id, color,
+                mag: +sliders.mag.value,
+                freq: +sliders.freq.value,
+                phase: +sliders.phase.value * Math.PI/180,
+                buffer: []
+            };
+
+            Object.entries(sliders).forEach(([prop, el]) => {
+                el.addEventListener('input', () => {
+                    if (prop === 'phase') {
+                        ph.phase = el.value * Math.PI/180;
+                        valSpans[prop].textContent = el.value;
+                    } else {
+                        ph[prop] = +el.value;
+                        valSpans[prop].textContent = ph[prop].toFixed(1);
+                    }
+                });
+            });
+
+            removeBtn.addEventListener('click', () => {
+                phasors = phasors.filter(x => x.id !== id);
+                row.remove();
+                updateLegend();
+            });
+
+            phasors.push(ph);
+            updateLegend();
+        }
+
+        function updateLegend() {
+            const legend = document.getElementById('phasorLegend');
+            legend.innerHTML = phasors.map((ph, i) =>
+                `<div class="legend-item"><div class="legend-color" style="background:${ph.color}"></div>Phasor ${i+1}</div>`
+            ).join('') + '<div class="legend-item"><div class="legend-color" style="background:#fff"></div>Sum</div>';
+        }
+
+        document.getElementById('addPhasor').addEventListener('click', addPhasor);
+
+        function drawArrow(ctx, x1, y1, x2, y2, color, width=3) {
+            const head = 8;
+            const dx = x2-x1, dy = y2-y1;
+            const ang = Math.atan2(dy, dx);
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = width;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - head*Math.cos(ang - Math.PI/6), y2 - head*Math.sin(ang - Math.PI/6));
+            ctx.lineTo(x2 - head*Math.cos(ang + Math.PI/6), y2 - head*Math.sin(ang + Math.PI/6));
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        let lastTime = performance.now();
+        function animate(now) {
+            const dt = (now - lastTime)/1000;
+            lastTime = now;
+
+            // Phasor plane
+            pCtx.fillStyle = '#0f172a';
+            pCtx.fillRect(0, 0, pC.width, pC.height);
+            const cx = pC.width/2, cy = pC.height/2, R = Math.min(cx, cy)*0.8;
+
+            // Grid circles
+            pCtx.strokeStyle = '#334155';
+            pCtx.lineWidth = 0.5;
+            for (let r = R/4; r <= R; r += R/4) {
+                pCtx.beginPath();
+                pCtx.arc(cx, cy, r, 0, 2*Math.PI);
+                pCtx.stroke();
+            }
+
+            // Axes
+            pCtx.strokeStyle = '#475569';
+            pCtx.lineWidth = 1;
+            pCtx.beginPath();
+            pCtx.moveTo(cx-R-10, cy); pCtx.lineTo(cx+R+10, cy);
+            pCtx.moveTo(cx, cy-R-10); pCtx.lineTo(cx, cy+R+10);
+            pCtx.stroke();
+
+            let sumX = 0, sumY = 0;
+            phasors.forEach(ph => {
+                const θ = 2*Math.PI*ph.freq*(now/1000) + ph.phase;
+                const x = R * (ph.mag/10) * Math.cos(θ);
+                const y = R * (ph.mag/10) * Math.sin(θ);
+                sumX += x; sumY += y;
+                drawArrow(pCtx, cx, cy, cx+x, cy-y, ph.color);
+            });
+
+            // Sum vector
+            drawArrow(pCtx, cx, cy, cx+sumX, cy-sumY, '#ffffff', 4);
+
+            // Time domain
+            tCtx.fillStyle = '#0f172a';
+            tCtx.fillRect(0, 0, tC.width, tC.height);
+            const mid = tC.height/2;
+
+            // Grid
+            tCtx.strokeStyle = '#334155';
+            tCtx.lineWidth = 0.5;
+            for (let y = mid; y >= 0; y -= 30) {
+                tCtx.beginPath(); tCtx.moveTo(0, y); tCtx.lineTo(tC.width, y); tCtx.stroke();
+                tCtx.beginPath(); tCtx.moveTo(0, 2*mid-y); tCtx.lineTo(tC.width, 2*mid-y); tCtx.stroke();
+            }
+
+            // Zero line
+            tCtx.strokeStyle = '#475569';
+            tCtx.lineWidth = 1;
+            tCtx.beginPath();
+            tCtx.moveTo(0, mid);
+            tCtx.lineTo(tC.width, mid);
+            tCtx.stroke();
+
+            // Update buffers and draw
+            phasors.forEach(ph => {
+                const sample = ph.mag * Math.cos(2*Math.PI*ph.freq*(now/1000) + ph.phase);
+                ph.buffer.push(sample);
+                if (ph.buffer.length > maxSamples) ph.buffer.shift();
+
+                tCtx.strokeStyle = ph.color;
+                tCtx.lineWidth = 2;
+                tCtx.beginPath();
+                ph.buffer.forEach((v, i) => {
+                    const y = mid - (v/10)*mid*0.8;
+                    if (i === 0) tCtx.moveTo(i, y);
+                    else tCtx.lineTo(i, y);
+                });
+                tCtx.stroke();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start with one phasor
+        addPhasor();
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

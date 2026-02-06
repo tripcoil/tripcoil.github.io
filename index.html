@@ -53,6 +53,7 @@
             background: #1d1d1f;
             border-radius: 12px;
             overflow: hidden;
+            text-align: left;
         }
 
         .tool {
@@ -70,6 +71,10 @@
             background: #1d1d1f;
         }
 
+        .tool-info {
+            flex: 1;
+        }
+
         .tool-name {
             font-size: 1.1rem;
             font-weight: 500;
@@ -84,24 +89,13 @@
         .tool-arrow {
             color: #86868b;
             font-size: 1.25rem;
+            margin-left: 16px;
             transition: transform 0.2s, color 0.2s;
         }
 
         .tool:hover .tool-arrow {
             transform: translateX(4px);
             color: #fff;
-        }
-
-        .empty {
-            padding: 60px 24px;
-            color: #86868b;
-            background: #000;
-        }
-
-        .loading {
-            padding: 60px 24px;
-            color: #86868b;
-            background: #000;
         }
 
         @media (max-width: 480px) {
@@ -131,57 +125,23 @@
         <h1>TripCoil</h1>
         <p class="tagline">Tools for power systems engineers</p>
 
-        <nav class="tools" id="tools" role="navigation" aria-label="Available tools">
-            <div class="loading">Loading...</div>
+        <nav class="tools" role="navigation" aria-label="Available tools">
+            <a href="/random/" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Relay Tools</div>
+                    <div class="tool-desc">13 calculators for protection and power systems engineering</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
+
+            <a href="/synchroscope/" class="tool">
+                <div class="tool-info">
+                    <div class="tool-name">Synchroscope</div>
+                    <div class="tool-desc">Interactive generator synchronization trainer</div>
+                </div>
+                <span class="tool-arrow">→</span>
+            </a>
         </nav>
     </div>
-
-    <script>
-        async function loadTools() {
-            const container = document.getElementById('tools');
-
-            try {
-                const response = await fetch('https://api.github.com/users/tripcoil/repos?sort=updated');
-                if (!response.ok) throw new Error('Failed to load');
-
-                const repos = await response.json();
-                const tools = repos.filter(r =>
-                    !r.name.includes('.github.io') && !r.private
-                );
-
-                if (tools.length === 0) {
-                    container.innerHTML = '<div class="empty">No tools available</div>';
-                    return;
-                }
-
-                container.innerHTML = tools.map(repo => `
-                    <a href="https://tripcoil.com/${repo.name}" class="tool">
-                        <div>
-                            <div class="tool-name">${formatName(repo.name)}</div>
-                            ${repo.description ? `<div class="tool-desc">${escapeHtml(repo.description)}</div>` : ''}
-                        </div>
-                        <span class="tool-arrow">→</span>
-                    </a>
-                `).join('');
-
-            } catch (e) {
-                container.innerHTML = '<div class="empty">Unable to load tools</div>';
-            }
-        }
-
-        function formatName(name) {
-            return name
-                .replace(/-/g, ' ')
-                .replace(/\b\w/g, c => c.toUpperCase());
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        loadTools();
-    </script>
 </body>
 </html>
