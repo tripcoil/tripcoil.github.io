@@ -4,112 +4,396 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transformer Phasing Tool</title>
-    <link rel="stylesheet" href="tokens.css">
     <style>
-        .config-section {
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2, h3, h4 {
+            color: #e2e8f0;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        h3 {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--space-md);
-            padding: var(--space-lg);
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-xl);
+            gap: 20px;
         }
 
-        .canvas-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-lg);
-            margin-bottom: var(--space-xl);
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         }
 
-        .canvas-section {
-            text-align: center;
-            padding: var(--space-lg);
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         }
 
-        .canvas-section h3 {
-            margin-bottom: var(--space-md);
-            color: var(--text-secondary);
+        label {
+            display: block;
             font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button.secondary {
+            background: #334155;
+            border: 1px solid #475569;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .unit {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-left: 4px;
+        }
+
+        .results {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .results .value {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .results .success {
+            color: #10b981;
+        }
+
+        .results .warning {
+            color: #f59e0b;
+        }
+
+        .results .error {
+            color: #ef4444;
+        }
+
+        .show-work {
+            margin-top: 16px;
+        }
+
+        .show-work summary {
+            cursor: pointer;
+            color: #3b82f6;
+            font-size: 0.875rem;
+            padding: 8px 0;
+        }
+
+        .show-work summary:hover {
+            text-decoration: underline;
+        }
+
+        .show-work-content {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
         }
 
         canvas {
-            background: var(--bg);
-            border-radius: var(--radius-sm);
-        }
-
-        .vector-group {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--text);
-            text-align: center;
-            padding: var(--space-xl);
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-xl);
-        }
-
-        .vector-group small {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
             display: block;
+            max-width: 100%;
+        }
+
+        .canvas-container {
+            position: relative;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 1px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+            text-decoration: none;
             font-size: 0.875rem;
-            color: var(--text-muted);
-            font-weight: 400;
-            margin-top: var(--space-sm);
+            margin-bottom: 16px;
         }
 
-        .phase-table {
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-        }
-
-        .phase-table h2 {
-            padding: var(--space-lg);
-            margin: 0;
-            font-size: 1rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--bg-hover);
+        .back-link:hover {
+            color: #3b82f6;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 0.875rem;
         }
 
         th, td {
-            padding: var(--space-md);
+            padding: 10px 12px;
             text-align: left;
-            border-bottom: 1px solid var(--bg-hover);
+            border-bottom: 1px solid #475569;
         }
 
         th {
+            background: #0f172a;
+            color: #94a3b8;
+            font-weight: 500;
             font-size: 0.75rem;
-            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            font-weight: 500;
         }
 
-        td {
-            font-family: var(--font-mono);
+        tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
         }
 
-        .phase-a { color: var(--phase-a); }
-        .phase-b { color: var(--phase-b); }
-        .phase-c { color: var(--phase-c); }
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .card {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            .results, .show-work-content {
+                background: #f5f5f5;
+                border: 1px solid #ccc;
+            }
+            canvas {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            button, .back-link {
+                display: none;
+            }
+        }
 
+        /* Mobile responsive */
         @media (max-width: 768px) {
-            .config-section {
+            .container {
+                padding: 12px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .input-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .grid-2, .grid-3 {
                 grid-template-columns: 1fr;
             }
+        }
+    
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .canvas-section {
+            text-align: center;
+        }
+        .canvas-section h3 {
+            margin-bottom: 12px;
+            color: #94a3b8;
+        }
+        .vector-group {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #3b82f6;
+            text-align: center;
+            padding: 20px;
+            background: #0f172a;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .vector-group small {
+            display: block;
+            font-size: 0.875rem;
+            color: #94a3b8;
+            font-weight: 400;
+            margin-top: 8px;
+        }
+        .phase-table {
+            margin-top: 20px;
+        }
+        .input-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        @media (max-width: 768px) {
             .canvas-grid {
+                grid-template-columns: 1fr;
+            }
+            .input-row {
                 grid-template-columns: 1fr;
             }
         }
@@ -117,45 +401,43 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <a href="/random/" class="header-back">← Relay Tools</a>
-            <span class="header-title">Transformer Phasing</span>
-        </header>
-
+        <a href="index.html" class="back-link">← Back to Tools</a>
         <h1>Transformer Phasing Tool</h1>
-        <p class="tagline">Visualize transformer vector groups and phase relationships</p>
 
-        <div class="config-section">
-            <div class="input-group">
-                <label for="type">Transformer Type</label>
-                <select id="type">
-                    <option value="Y-Y">Wye-Wye (Y-Y)</option>
-                    <option value="D-D">Delta-Delta (D-D)</option>
-                    <option value="D-Y" selected>Delta-Wye (D-Y)</option>
-                    <option value="Y-D">Wye-Delta (Y-D)</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="rotation">System Phase Rotation</label>
-                <select id="rotation">
-                    <option value="ABC">ABC (Positive Sequence)</option>
-                    <option value="ACB">ACB (Negative Sequence)</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="connection">High Side Connection (H1-H2-H3)</label>
-                <select id="connection">
-                    <option value="ABC">A-B-C</option>
-                    <option value="ACB">A-C-B</option>
-                    <option value="BAC">B-A-C</option>
-                    <option value="BCA">B-C-A</option>
-                    <option value="CAB">C-A-B</option>
-                    <option value="CBA">C-B-A</option>
-                </select>
+        <div class="card">
+            <h2>Configuration</h2>
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="type">Transformer Type</label>
+                    <select id="type">
+                        <option value="Y-Y">Wye-Wye (Y-Y)</option>
+                        <option value="D-D">Delta-Delta (D-D)</option>
+                        <option value="D-Y" selected>Delta-Wye (D-Y)</option>
+                        <option value="Y-D">Wye-Delta (Y-D)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="rotation">System Phase Rotation</label>
+                    <select id="rotation">
+                        <option value="ABC">ABC (Positive Sequence)</option>
+                        <option value="ACB">ACB (Negative Sequence)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="connection">High Side Connection (H1-H2-H3)</label>
+                    <select id="connection">
+                        <option value="ABC">A-B-C</option>
+                        <option value="ACB">A-C-B</option>
+                        <option value="BAC">B-A-C</option>
+                        <option value="BCA">B-C-A</option>
+                        <option value="CAB">C-A-B</option>
+                        <option value="CBA">C-B-A</option>
+                    </select>
+                </div>
             </div>
         </div>
 
-        <div class="canvas-grid">
+        <div class="card canvas-grid">
             <div class="canvas-section">
                 <h3>High Side Phasors</h3>
                 <canvas id="highCanvas" width="350" height="350"></canvas>
@@ -166,9 +448,11 @@
             </div>
         </div>
 
-        <div class="vector-group" id="vectorGroup">Dy1</div>
+        <div class="card">
+            <div class="vector-group" id="vectorGroup">Dy1</div>
+        </div>
 
-        <div class="phase-table">
+        <div class="card phase-table">
             <h2>Phase Relationships</h2>
             <table>
                 <thead>
@@ -184,17 +468,72 @@
             </table>
         </div>
 
-        <div class="drawer-trigger" id="stepToggle">See explanation →</div>
-        <div class="step-content" id="stepContent">
+        <details class="show-work">
+            <summary>Show Explanation</summary>
             <div class="show-work-content" id="explanation"></div>
-        </div>
+        </details>
     </div>
 
     <script>
+
+        function validateNumber(value, min, max, fieldName) {
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+                return { valid: false, error: `${fieldName} must be a valid number` };
+            }
+            if (min !== null && num < min) {
+                return { valid: false, error: `${fieldName} must be >= ${min}` };
+            }
+            if (max !== null && num > max) {
+                return { valid: false, error: `${fieldName} must be <= ${max}` };
+            }
+            return { valid: true, value: num };
+        }
+
+        function validatePositive(value, fieldName) {
+            const result = validateNumber(value, 0.0001, null, fieldName);
+            if (!result.valid) return result;
+            if (result.value <= 0) {
+                return { valid: false, error: `${fieldName} must be positive` };
+            }
+            return result;
+        }
+
+        function validateNonNegative(value, fieldName) {
+            return validateNumber(value, 0, null, fieldName);
+        }
+
+        function showError(message) {
+            alert('Input Error: ' + message);
+        }
+
+        function formatEngineering(value, decimals = 4) {
+            if (Math.abs(value) === 0) return '0';
+            if (Math.abs(value) >= 1e6) return (value / 1e6).toFixed(decimals) + ' M';
+            if (Math.abs(value) >= 1e3) return (value / 1e3).toFixed(decimals) + ' k';
+            if (Math.abs(value) >= 1) return value.toFixed(decimals);
+            if (Math.abs(value) >= 1e-3) return (value * 1e3).toFixed(decimals) + ' m';
+            if (Math.abs(value) >= 1e-6) return (value * 1e6).toFixed(decimals) + ' μ';
+            return value.toExponential(decimals);
+        }
+
+        function formatAngle(degrees) {
+            return degrees.toFixed(2) + '°';
+        }
+
+        function formatComplex(re, im, decimals = 4) {
+            const sign = im >= 0 ? '+' : '-';
+            return `${re.toFixed(decimals)} ${sign} j${Math.abs(im).toFixed(decimals)}`;
+        }
+
+        function formatPolar(mag, angDeg, decimals = 4) {
+            return `${mag.toFixed(decimals)} ∠ ${angDeg.toFixed(2)}°`;
+        }
+    
         const PHASE_COLORS = {
-            'A': '#ff453a',
-            'B': '#30d158',
-            'C': '#0a84ff'
+            'A': '#ef4444',
+            'B': '#22c55e',
+            'C': '#3b82f6'
         };
 
         function drawPhasors(canvas, angles, labels, bushing_labels) {
@@ -203,16 +542,19 @@
             const cy = canvas.height / 2;
             const radius = 120;
 
-            ctx.fillStyle = '#000';
+            // Clear and fill background
+            ctx.fillStyle = '#0f172a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.strokeStyle = '#3a3a3c';
+            // Draw circle
+            ctx.strokeStyle = '#475569';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
             ctx.stroke();
 
-            ctx.strokeStyle = '#1d1d1f';
+            // Draw axes
+            ctx.strokeStyle = '#334155';
             ctx.beginPath();
             ctx.moveTo(cx - radius - 20, cy);
             ctx.lineTo(cx + radius + 20, cy);
@@ -220,6 +562,7 @@
             ctx.lineTo(cx, cy + radius + 20);
             ctx.stroke();
 
+            // Draw phasors
             for (let i = 0; i < 3; i++) {
                 const angDeg = angles[i];
                 const angRad = angDeg * Math.PI / 180;
@@ -235,6 +578,7 @@
                 ctx.lineTo(endX, endY);
                 ctx.stroke();
 
+                // Arrowhead
                 const headlen = 12;
                 const dx = endX - cx;
                 const dy = endY - cy;
@@ -247,16 +591,18 @@
                 ctx.closePath();
                 ctx.fill();
 
+                // Label
                 const labelX = cx + (radius + 35) * Math.cos(angRad);
                 const labelY = cy - (radius + 35) * Math.sin(angRad);
-                ctx.fillStyle = '#fff';
+                ctx.fillStyle = '#e2e8f0';
                 ctx.font = '14px -apple-system, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(bushing_labels[i] + '-' + phase, labelX, labelY);
             }
 
-            ctx.fillStyle = '#86868b';
+            // Draw 12 o'clock reference
+            ctx.fillStyle = '#64748b';
             ctx.font = '11px -apple-system, sans-serif';
             ctx.fillText('0°/12', cx, cy - radius - 30);
         }
@@ -266,35 +612,45 @@
             const rotation = document.getElementById('rotation').value;
             const conn = document.getElementById('connection').value;
 
+            // Positive and negative sequence connections
             const positiveConns = ['ABC', 'BCA', 'CAB'];
             let isPositiveSequence = positiveConns.includes(conn);
             if (rotation === 'ACB') {
                 isPositiveSequence = !isPositiveSequence;
             }
 
+            // System angles (reference A at 0°)
+            // For ABC: A=0°, B=-120°, C=+120° (positive sequence)
+            // For ACB: A=0°, B=+120°, C=-120° (negative sequence)
             let system = {};
             if (rotation === 'ABC') {
-                system = { 'A': 90, 'B': -30, 'C': 210 };
+                system = { 'A': 90, 'B': -30, 'C': 210 };  // A at 12 o'clock
             } else {
                 system = { 'A': 90, 'B': 210, 'C': -30 };
             }
 
+            // Connection phases
             const phases = conn.split('');
             const highAngles = [system[phases[0]], system[phases[1]], system[phases[2]]];
             const highLabels = phases;
             const highBushings = ['H1', 'H2', 'H3'];
 
+            // Low side shift based on transformer type
+            // IEEE/ANSI: High side leads low side by 30° for D-Y (standard)
+            // This means low side LAGS high side by 30°
             let shift = 0;
             if (type === 'D-Y') {
-                shift = isPositiveSequence ? -30 : 30;
+                shift = isPositiveSequence ? -30 : 30;  // Low side lags
             } else if (type === 'Y-D') {
-                shift = isPositiveSequence ? 30 : -30;
+                shift = isPositiveSequence ? 30 : -30;  // Low side leads
             }
 
             const lowAngles = highAngles.map(a => ((a + shift) % 360 + 360) % 360);
-            const lowLabels = phases;
+            const lowLabels = phases;  // Same phase letters
             const lowBushings = ['X1', 'X2', 'X3'];
 
+            // Calculate vector group
+            // Clock hour = shift / 30
             let clockHour = Math.round((-shift / 30 + 12) % 12);
             if (clockHour === 0) clockHour = 12;
             if (type === 'Y-Y' || type === 'D-D') clockHour = 0;
@@ -306,14 +662,16 @@
             document.getElementById('vectorGroup').innerHTML = vectorGroup +
                 '<small>IEEE/ANSI Vector Group Designation</small>';
 
+            // Draw canvases
             drawPhasors(document.getElementById('highCanvas'), highAngles, highLabels, highBushings);
             drawPhasors(document.getElementById('lowCanvas'), lowAngles, lowLabels, lowBushings);
 
+            // Update phase table
             let tableHTML = '';
             for (let i = 0; i < 3; i++) {
                 tableHTML += `<tr>
                     <td>${highBushings[i]}</td>
-                    <td class="phase-${phases[i].toLowerCase()}">${phases[i]}</td>
+                    <td style="color: ${PHASE_COLORS[phases[i]]}">${phases[i]}</td>
                     <td>${highAngles[i].toFixed(0)}°</td>
                     <td>${lowBushings[i]}</td>
                     <td>${lowAngles[i].toFixed(0)}°</td>
@@ -321,41 +679,34 @@
             }
             document.getElementById('phaseTable').innerHTML = tableHTML;
 
-            let explanation = `Transformer Type: ${type}
-System Rotation: ${rotation} (${rotation === 'ABC' ? 'Positive' : 'Negative'} Sequence)
-High Side Connection: ${conn} on H1-H2-H3
-
-`;
+            // Explanation
+            let explanation = `Transformer Type: ${type}\n`;
+            explanation += `System Rotation: ${rotation} (${rotation === 'ABC' ? 'Positive' : 'Negative'} Sequence)\n`;
+            explanation += `High Side Connection: ${conn} on H1-H2-H3\n\n`;
 
             if (type === 'D-Y' || type === 'Y-D') {
-                explanation += `Phase Shift: ${Math.abs(shift)}° (${shift < 0 ? 'Low side lags' : 'Low side leads'})
-
-Per IEEE C57.12.00:
-- For D-Y transformers with positive sequence, high side leads low side by 30°
-- This is equivalent to the low side lagging by 30°
-`;
+                explanation += `Phase Shift: ${Math.abs(shift)}° (${shift < 0 ? 'Low side lags' : 'Low side leads'})\n`;
+                explanation += `\nPer IEEE C57.12.00:\n`;
+                explanation += `- For D-Y transformers with positive sequence, high side leads low side by 30°\n`;
+                explanation += `- This is equivalent to the low side lagging by 30°\n`;
             } else {
-                explanation += `No phase shift for ${type} connection
-`;
+                explanation += `No phase shift for ${type} connection\n`;
             }
 
-            explanation += `
-Vector Group: ${vectorGroup}
-- First letter (${primarySymbol}): Primary winding connection
-- Second letter (${secondarySymbol.toLowerCase()}): Secondary winding connection
-- Number (${clockHour}): Clock hour position of low voltage phasor`;
+            explanation += `\nVector Group: ${vectorGroup}\n`;
+            explanation += `- First letter (${primarySymbol}): Primary winding connection\n`;
+            explanation += `- Second letter (${secondarySymbol.toLowerCase()}): Secondary winding connection\n`;
+            explanation += `- Number (${clockHour}): Clock hour position of low voltage phasor\n`;
 
             document.getElementById('explanation').textContent = explanation;
         }
 
+        // Event listeners
         document.getElementById('type').addEventListener('change', updatePlots);
         document.getElementById('rotation').addEventListener('change', updatePlots);
         document.getElementById('connection').addEventListener('change', updatePlots);
 
-        document.getElementById('stepToggle').addEventListener('click', () => {
-            document.getElementById('stepContent').classList.toggle('open');
-        });
-
+        // Initial draw
         updatePlots();
     </script>
 </body>

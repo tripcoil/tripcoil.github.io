@@ -4,128 +4,432 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mho Distance Relay Visualizer</title>
-    <link rel="stylesheet" href="tokens.css">
     <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2, h3, h4 {
+            color: #e2e8f0;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        h3 {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button.secondary {
+            background: #334155;
+            border: 1px solid #475569;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .unit {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-left: 4px;
+        }
+
+        .results {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .results .value {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .results .success {
+            color: #10b981;
+        }
+
+        .results .warning {
+            color: #f59e0b;
+        }
+
+        .results .error {
+            color: #ef4444;
+        }
+
+        .show-work {
+            margin-top: 16px;
+        }
+
+        .show-work summary {
+            cursor: pointer;
+            color: #3b82f6;
+            font-size: 0.875rem;
+            padding: 8px 0;
+        }
+
+        .show-work summary:hover {
+            text-decoration: underline;
+        }
+
+        .show-work-content {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+        }
+
+        canvas {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            display: block;
+            max-width: 100%;
+        }
+
+        .canvas-container {
+            position: relative;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 1px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+
+        .back-link:hover {
+            color: #3b82f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #475569;
+        }
+
+        th {
+            background: #0f172a;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .card {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            .results, .show-work-content {
+                background: #f5f5f5;
+                border: 1px solid #ccc;
+            }
+            canvas {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            button, .back-link {
+                display: none;
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .input-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    
         .main-layout {
             display: grid;
             grid-template-columns: 350px 1fr;
-            gap: var(--space-lg);
+            gap: 20px;
         }
-
         .controls-panel {
-            padding: var(--space-lg);
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
-            max-height: calc(100vh - 160px);
+            max-height: calc(100vh - 120px);
             overflow-y: auto;
         }
-
         .section-title {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin: var(--space-lg) 0 var(--space-md) 0;
-            padding-bottom: var(--space-sm);
-            border-bottom: 1px solid var(--bg-hover);
+            margin: 20px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #475569;
         }
-
         .section-title:first-child {
             margin-top: 0;
         }
-
         .input-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: var(--space-md);
+            gap: 12px;
         }
-
         .checkbox-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: var(--space-sm);
+            gap: 8px;
         }
-
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: var(--space-sm);
+            gap: 8px;
             font-size: 0.875rem;
         }
-
         .checkbox-item input {
             margin: 0;
-            accent-color: var(--text);
         }
-
-        .zone-phase { color: var(--phase-c); }
-        .zone-ground { color: var(--phase-b); }
-
+        .zone-phase { color: #3b82f6; }
+        .zone-ground { color: #22c55e; }
         .computed-k0 {
-            background: var(--bg);
-            padding: var(--space-md);
-            border-radius: var(--radius-sm);
-            margin: var(--space-md) 0;
-            font-family: var(--font-mono);
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 12px 0;
+            font-family: 'Consolas', monospace;
             font-size: 0.875rem;
         }
-
         .plot-container {
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
-            padding: var(--space-lg);
+            position: relative;
         }
-
         #canvas {
             cursor: grab;
             width: 100%;
             max-width: 700px;
-            background: var(--bg);
-            border-radius: var(--radius-sm);
         }
-
         #canvas:active {
             cursor: grabbing;
         }
-
         .trip-status {
-            margin-top: var(--space-md);
-            padding: var(--space-md);
-            border-radius: var(--radius-sm);
-            font-family: var(--font-mono);
-            text-align: center;
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
         }
-
         .trip-status.trip {
-            background: rgba(255, 69, 58, 0.1);
-            border: 1px solid var(--error);
-            color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
         }
-
         .trip-status.no-trip {
-            background: rgba(48, 209, 88, 0.1);
-            border: 1px solid var(--success);
-            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            color: #10b981;
         }
-
-        .copy-btn {
-            width: 100%;
-            margin-top: var(--space-md);
-            padding: var(--space-sm) var(--space-md);
-            background: var(--bg-hover);
-            border: 1px solid var(--bg-hover);
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-
-        .copy-btn:hover {
-            background: var(--bg);
-            border-color: var(--text-secondary);
-        }
-
         @media (max-width: 1000px) {
             .main-layout {
                 grid-template-columns: 1fr;
@@ -138,16 +442,11 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <a href="/random/" class="header-back">← Relay Tools</a>
-            <span class="header-title">Mho Circles</span>
-        </header>
-
+        <a href="index.html" class="back-link">← Back to Tools</a>
         <h1>Mho Distance Relay Visualizer</h1>
-        <p class="tagline">Visualize zone reaches and check trip conditions</p>
 
         <div class="main-layout">
-            <div class="controls-panel">
+            <div class="controls-panel card">
                 <div class="section-title">Line Parameters</div>
                 <div class="input-grid">
                     <div class="input-group">
@@ -183,7 +482,7 @@
                         <input type="number" id="k0a" value="-5.4">
                     </div>
                 </div>
-                <button class="copy-btn" onclick="copyK0()">Copy Computed k₀ to Settings</button>
+                <button class="secondary" onclick="copyK0()" style="width:100%; margin-top:12px;">Copy Computed k₀ to Settings</button>
 
                 <div class="section-title">Phase Mho Reaches (Ω)</div>
                 <div class="input-grid">
@@ -256,21 +555,78 @@
                         <input type="number" id="faultX" value="6" step="0.1">
                     </div>
                 </div>
+
+                <button onclick="drawPlot()" style="width:100%; margin-top:16px;">Update Plot</button>
             </div>
 
-            <div class="plot-container">
+            <div class="card plot-container">
                 <canvas id="canvas" width="700" height="700"></canvas>
                 <div class="trip-status no-trip" id="tripStatus">No trip</div>
             </div>
         </div>
 
-        <div class="drawer-trigger" id="stepToggle">See calculations →</div>
-        <div class="step-content" id="stepContent">
+        <details class="show-work">
+            <summary>Show Calculations</summary>
             <div class="show-work-content" id="calculations"></div>
-        </div>
+        </details>
     </div>
 
     <script>
+
+        function validateNumber(value, min, max, fieldName) {
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+                return { valid: false, error: `${fieldName} must be a valid number` };
+            }
+            if (min !== null && num < min) {
+                return { valid: false, error: `${fieldName} must be >= ${min}` };
+            }
+            if (max !== null && num > max) {
+                return { valid: false, error: `${fieldName} must be <= ${max}` };
+            }
+            return { valid: true, value: num };
+        }
+
+        function validatePositive(value, fieldName) {
+            const result = validateNumber(value, 0.0001, null, fieldName);
+            if (!result.valid) return result;
+            if (result.value <= 0) {
+                return { valid: false, error: `${fieldName} must be positive` };
+            }
+            return result;
+        }
+
+        function validateNonNegative(value, fieldName) {
+            return validateNumber(value, 0, null, fieldName);
+        }
+
+        function showError(message) {
+            alert('Input Error: ' + message);
+        }
+
+        function formatEngineering(value, decimals = 4) {
+            if (Math.abs(value) === 0) return '0';
+            if (Math.abs(value) >= 1e6) return (value / 1e6).toFixed(decimals) + ' M';
+            if (Math.abs(value) >= 1e3) return (value / 1e3).toFixed(decimals) + ' k';
+            if (Math.abs(value) >= 1) return value.toFixed(decimals);
+            if (Math.abs(value) >= 1e-3) return (value * 1e3).toFixed(decimals) + ' m';
+            if (Math.abs(value) >= 1e-6) return (value * 1e6).toFixed(decimals) + ' μ';
+            return value.toExponential(decimals);
+        }
+
+        function formatAngle(degrees) {
+            return degrees.toFixed(2) + '°';
+        }
+
+        function formatComplex(re, im, decimals = 4) {
+            const sign = im >= 0 ? '+' : '-';
+            return `${re.toFixed(decimals)} ${sign} j${Math.abs(im).toFixed(decimals)}`;
+        }
+
+        function formatPolar(mag, angDeg, decimals = 4) {
+            return `${mag.toFixed(decimals)} ∠ ${angDeg.toFixed(2)}°`;
+        }
+    
         let zoom = 1.0;
         let viewCenterR = 0.0;
         let viewCenterX = 0.0;
@@ -278,13 +634,10 @@
         let dragStartR = 0, dragStartX = 0;
         let dragStartMouseX = 0, dragStartMouseY = 0;
 
+        // Attach event listeners to all inputs
         document.querySelectorAll('input, select').forEach(el => {
             el.addEventListener('change', drawPlot);
             el.addEventListener('input', drawPlot);
-        });
-
-        document.getElementById('stepToggle').addEventListener('click', () => {
-            document.getElementById('stepContent').classList.toggle('open');
         });
 
         function copyK0() {
@@ -293,7 +646,10 @@
             const lineAngleDeg = parseFloat(document.getElementById('lineAngle').value);
             const z0angDeg = parseFloat(document.getElementById('z0ang').value);
 
-            if (isNaN(z1mag) || isNaN(z0mag) || z1mag <= 0 || z0mag <= 0) return;
+            if (isNaN(z1mag) || isNaN(z0mag) || z1mag <= 0 || z0mag <= 0) {
+                alert('Please enter valid Z1 and Z0 magnitudes.');
+                return;
+            }
 
             const lineAngleRad = lineAngleDeg * Math.PI / 180;
             const z0angRad = z0angDeg * Math.PI / 180;
@@ -352,9 +708,11 @@
             const centerX = width / 2;
             const centerY = height / 2;
 
-            ctx.fillStyle = '#000';
+            // Background
+            ctx.fillStyle = '#0f172a';
             ctx.fillRect(0, 0, width, height);
 
+            // Settings
             const lineAngleDeg = parseFloat(document.getElementById('lineAngle').value);
             const lineAngleRad = lineAngleDeg * Math.PI / 180;
 
@@ -371,6 +729,7 @@
             const k0m_set = parseFloat(document.getElementById('k0m').value);
             const k0a_set = parseFloat(document.getElementById('k0a').value);
 
+            // Compute k0
             let k0_re = 0, k0_im = 0;
             let calcText = '';
             if (!isNaN(z1mag) && !isNaN(z0mag) && z1mag > 0 && z0mag > 0 && !isNaN(z0angDeg)) {
@@ -393,37 +752,44 @@
                 document.getElementById('computedK0').innerHTML =
                     `<strong>Computed k₀:</strong> ${k0m.toFixed(4)} ∠ ${k0a.toFixed(2)}°`;
 
-                calcText = `Zero Sequence Compensation Factor k₀
+                calcText = `Zero Sequence Compensation Factor k₀:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 k₀ = (Z₀/Z₁ - 1) / 3
 
 Given:
-  Z₁ = ${z1mag} ∠ ${lineAngleDeg}° Ω
-  Z₀ = ${z0mag} ∠ ${z0angDeg}° Ω
+  Z₁ = ${z1mag} ∠ ${lineAngleDeg}° Ω = ${z1_re.toFixed(4)} + j${z1_im.toFixed(4)} Ω
+  Z₀ = ${z0mag} ∠ ${z0angDeg}° Ω = ${z0_re.toFixed(4)} + j${z0_im.toFixed(4)} Ω
 
-Result:
+Calculation:
+  Z₀/Z₁ = ${z0_over_z1_re.toFixed(4)} + j${z0_over_z1_im.toFixed(4)}
+  k₀ = (${z0_over_z1_re.toFixed(4)} - 1)/3 + j${z0_over_z1_im.toFixed(4)}/3
+  k₀ = ${k0_re.toFixed(4)} + j${k0_im.toFixed(4)}
   k₀ = ${k0m.toFixed(4)} ∠ ${k0a.toFixed(2)}°
 `;
             }
 
+            // Scale
             let maxReach = Math.max(...Object.values(reaches)) || 1;
             const baseScale = Math.min(width, height) / (3 * maxReach);
             const scale = baseScale * zoom;
             if (scale === 0) return;
 
+            // Visible range
             const minR = viewCenterR - (centerX / scale);
             const maxR = viewCenterR + ((width - centerX) / scale);
             const minX = viewCenterX - ((height - centerY) / scale);
             const maxX = viewCenterX + (centerY / scale);
             const visibleWidth = maxR - minR;
 
+            // Grid
             let gridInterval = Math.pow(10, Math.floor(Math.log10(visibleWidth / 10)));
             if (gridInterval <= 0 || !isFinite(gridInterval)) gridInterval = 1;
             const decimals = gridInterval < 1 ? 1 : 0;
 
-            ctx.strokeStyle = '#1d1d1f';
+            ctx.strokeStyle = '#334155';
             ctx.lineWidth = 0.5;
 
+            // R grid
             let gridStart = Math.ceil(minR / gridInterval) * gridInterval;
             for (let r = gridStart; r <= maxR; r += gridInterval) {
                 const px = centerX + (r - viewCenterR) * scale;
@@ -433,6 +799,7 @@ Result:
                 ctx.stroke();
             }
 
+            // X grid
             gridStart = Math.ceil(minX / gridInterval) * gridInterval;
             for (let x = gridStart; x <= maxX; x += gridInterval) {
                 const py = centerY - (x - viewCenterX) * scale;
@@ -442,7 +809,8 @@ Result:
                 ctx.stroke();
             }
 
-            ctx.strokeStyle = '#3a3a3c';
+            // Axes
+            ctx.strokeStyle = '#475569';
             ctx.lineWidth = 1;
             const axisX = centerX + (0 - viewCenterR) * scale;
             const axisY = centerY - (0 - viewCenterX) * scale;
@@ -453,11 +821,13 @@ Result:
             ctx.lineTo(width, axisY);
             ctx.stroke();
 
-            ctx.fillStyle = '#86868b';
+            // Axis labels
+            ctx.fillStyle = '#94a3b8';
             ctx.font = '12px -apple-system, sans-serif';
             ctx.fillText('R (Ω)', width - 50, axisY - 10);
             ctx.fillText('X (Ω)', axisX + 10, 20);
 
+            // Grid labels
             ctx.font = '10px -apple-system, sans-serif';
             gridStart = Math.ceil(minR / gridInterval) * gridInterval;
             for (let r = gridStart; r <= maxR; r += gridInterval) {
@@ -472,6 +842,7 @@ Result:
                 ctx.fillText(x.toFixed(decimals), axisX + 5, py + 4);
             }
 
+            // Draw Mho circles
             function drawMho(reach, color, label, isDashed = false) {
                 if (reach <= 0) return;
                 const cR = (reach / 2) * Math.cos(lineAngleRad);
@@ -492,6 +863,7 @@ Result:
                 ctx.stroke();
                 ctx.setLineDash([]);
 
+                // Label
                 const reachR = reach * Math.cos(lineAngleRad);
                 const reachX = reach * Math.sin(lineAngleRad);
                 const lx = centerX + (reachR - viewCenterR) * scale;
@@ -502,22 +874,22 @@ Result:
             }
 
             // Phase circles (blue shades)
-            if (shows.p1) drawMho(reaches.p1, '#0a84ff', 'P1');
-            if (shows.p2) drawMho(reaches.p2, '#409cff', 'P2');
-            if (shows.p3) drawMho(reaches.p3, '#70b8ff', 'P3', true);
-            if (shows.p4) drawMho(reaches.p4, '#a0d4ff', 'P4', true);
+            if (shows.p1) drawMho(reaches.p1, '#3b82f6', 'P1');
+            if (shows.p2) drawMho(reaches.p2, '#60a5fa', 'P2');
+            if (shows.p3) drawMho(reaches.p3, '#93c5fd', 'P3', true);
+            if (shows.p4) drawMho(reaches.p4, '#bfdbfe', 'P4', true);
 
             // Ground circles (green shades)
-            if (shows.g1) drawMho(reaches.g1, '#30d158', 'G1');
-            if (shows.g2) drawMho(reaches.g2, '#5ee382', 'G2');
-            if (shows.g3) drawMho(reaches.g3, '#8cf5ab', 'G3', true);
-            if (shows.g4) drawMho(reaches.g4, '#b8ffd0', 'G4', true);
+            if (shows.g1) drawMho(reaches.g1, '#22c55e', 'G1');
+            if (shows.g2) drawMho(reaches.g2, '#4ade80', 'G2');
+            if (shows.g3) drawMho(reaches.g3, '#86efac', 'G3', true);
+            if (shows.g4) drawMho(reaches.g4, '#bbf7d0', 'G4', true);
 
             // Line angle indicator
             const lineLen = maxReach * 1.2;
             const lineEndR = lineLen * Math.cos(lineAngleRad);
             const lineEndX = lineLen * Math.sin(lineAngleRad);
-            ctx.strokeStyle = '#ffd60a';
+            ctx.strokeStyle = '#f59e0b';
             ctx.lineWidth = 1;
             ctx.setLineDash([4, 4]);
             ctx.beginPath();
@@ -532,6 +904,7 @@ Result:
             let faultLabel = `(${faultR.toFixed(1)}, ${faultX.toFixed(1)})`;
 
             if (faultType === 'ground' && !isNaN(k0m_set) && !isNaN(k0a_set)) {
+                // Apply ground compensation
                 const one_plus_k0t_re = 1 + k0_re;
                 const one_plus_k0t_im = k0_im;
 
@@ -550,23 +923,40 @@ Result:
                 plotR = (zapp_re * one_plus_k0s_re + zapp_im * one_plus_k0s_im) / denom;
                 plotX = (zapp_im * one_plus_k0s_re - zapp_re * one_plus_k0s_im) / denom;
 
-                faultLabel = `(${faultR.toFixed(1)}, ${faultX.toFixed(1)}) → (${plotR.toFixed(2)}, ${plotX.toFixed(2)})`;
+                faultLabel = `(${faultR.toFixed(1)}, ${faultX.toFixed(1)}) → Comp: (${plotR.toFixed(2)}, ${plotX.toFixed(2)})`;
+
+                calcText += `
+Ground Fault Compensation:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Actual fault impedance: Z = ${faultR} + j${faultX} Ω
+
+Relay sees: Z_apparent = Z × (1 + k₀_true) / (1 + k₀_set)
+
+Where:
+  k₀_true = ${k0_re.toFixed(4)} + j${k0_im.toFixed(4)} (from line)
+  k₀_set  = ${k0m_set} ∠ ${k0a_set}° (relay setting)
+
+Result:
+  Z_apparent = ${plotR.toFixed(4)} + j${plotX.toFixed(4)} Ω
+`;
             }
 
+            // Draw fault point
             if (!isNaN(faultR) && !isNaN(faultX)) {
                 const fpx = centerX + (plotR - viewCenterR) * scale;
                 const fpy = centerY - (plotX - viewCenterX) * scale;
 
-                ctx.fillStyle = '#ff453a';
+                ctx.fillStyle = '#ef4444';
                 ctx.beginPath();
                 ctx.arc(fpx, fpy, 6, 0, 2 * Math.PI);
                 ctx.fill();
 
-                ctx.fillStyle = '#fff';
+                ctx.fillStyle = '#e2e8f0';
                 ctx.font = '11px -apple-system, sans-serif';
                 ctx.fillText(faultLabel, fpx + 12, fpy - 8);
             }
 
+            // Check trips
             function isInsideMho(reach, r, x) {
                 if (reach <= 0) return false;
                 const cr = (reach / 2) * Math.cos(lineAngleRad);
@@ -597,8 +987,10 @@ Result:
             document.getElementById('calculations').textContent = calcText;
         }
 
+        // Initial draw
         drawPlot();
 
+        // Mouse events for zoom/pan
         const canvas = document.getElementById('canvas');
 
         canvas.addEventListener('wheel', (e) => {

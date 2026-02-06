@@ -4,105 +4,430 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CT Saturation Calculator</title>
-    <link rel="stylesheet" href="tokens.css">
     <style>
-        .main-layout {
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2, h3, h4 {
+            color: #e2e8f0;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        h3 {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-lg);
+            gap: 20px;
         }
 
-        .input-section {
-            padding: var(--space-lg);
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         }
 
-        .section-title {
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button.secondary {
+            background: #334155;
+            border: 1px solid #475569;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .unit {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-left: 4px;
+        }
+
+        .results {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .results .value {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .results .success {
+            color: #10b981;
+        }
+
+        .results .warning {
+            color: #f59e0b;
+        }
+
+        .results .error {
+            color: #ef4444;
+        }
+
+        .show-work {
+            margin-top: 16px;
+        }
+
+        .show-work summary {
+            cursor: pointer;
+            color: #3b82f6;
+            font-size: 0.875rem;
+            padding: 8px 0;
+        }
+
+        .show-work summary:hover {
+            text-decoration: underline;
+        }
+
+        .show-work-content {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
             font-size: 0.8rem;
-            color: var(--text-secondary);
+            white-space: pre-wrap;
+        }
+
+        canvas {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            display: block;
+            max-width: 100%;
+        }
+
+        .canvas-container {
+            position: relative;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 1px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+
+        .back-link:hover {
+            color: #3b82f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #475569;
+        }
+
+        th {
+            background: #0f172a;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin: var(--space-lg) 0 var(--space-md) 0;
-            padding-bottom: var(--space-sm);
-            border-bottom: 1px solid var(--bg-hover);
         }
 
+        tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .card {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            .results, .show-work-content {
+                background: #f5f5f5;
+                border: 1px solid #ccc;
+            }
+            canvas {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            button, .back-link {
+                display: none;
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .input-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    
+        .main-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 20px;
+        }
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 16px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #475569;
+        }
         .section-title:first-child {
             margin-top: 0;
         }
-
         .input-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: var(--space-md);
+            gap: 12px;
         }
-
-        .status-banner {
-            padding: var(--space-lg);
-            border-radius: var(--radius-md);
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: var(--space-lg);
-        }
-
-        .status-banner.ok {
-            background: rgba(48, 209, 88, 0.1);
-            border: 1px solid var(--success);
-            color: var(--success);
-        }
-
-        .status-banner.warning {
-            background: rgba(255, 214, 10, 0.1);
-            border: 1px solid var(--warning);
-            color: var(--warning);
-        }
-
-        .status-banner.error {
-            background: rgba(255, 69, 58, 0.1);
-            border: 1px solid var(--error);
-            color: var(--error);
-        }
-
-        .result-grid {
+        .result-summary {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: var(--space-md);
+            gap: 12px;
+            margin-bottom: 20px;
         }
-
         .result-card {
-            background: var(--bg-subtle);
-            padding: var(--space-lg);
-            border-radius: var(--radius-md);
+            background: #0f172a;
+            padding: 16px;
+            border-radius: 4px;
             text-align: center;
         }
-
         .result-card .label {
             font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: var(--space-xs);
+            color: #64748b;
+            margin-bottom: 4px;
         }
-
         .result-card .value {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 600;
-            font-family: var(--font-mono);
+            font-family: 'Consolas', monospace;
         }
-
-        .result-card .value.ok { color: var(--success); }
-        .result-card .value.warning { color: var(--warning); }
-        .result-card .value.error { color: var(--error); }
-
+        .result-card .value.ok { color: #10b981; }
+        .result-card .value.warning { color: #f59e0b; }
+        .result-card .value.error { color: #ef4444; }
         .result-card .unit {
             font-size: 0.75rem;
-            color: var(--text-secondary);
+            color: #94a3b8;
         }
-
-        @media (max-width: 700px) {
+        .status-banner {
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .status-banner.ok {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+        .status-banner.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            color: #f59e0b;
+        }
+        .status-banner.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+        @media (max-width: 900px) {
             .main-layout {
-                grid-template-columns: 1fr;
-            }
-            .input-grid, .result-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -110,21 +435,16 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <a href="/random/" class="header-back">← Relay Tools</a>
-            <span class="header-title">CT Saturation</span>
-        </header>
-
-        <h1>CT Saturation</h1>
-        <p class="tagline">Evaluate CT performance under fault conditions</p>
+        <a href="index.html" class="back-link">← Back to Tools</a>
+        <h1>CT Saturation Calculator</h1>
 
         <div class="main-layout">
-            <div class="input-section">
-                <div class="section-title">CT Nameplate</div>
+            <div class="card">
+                <div class="section-title">CT Nameplate Data</div>
                 <div class="input-grid">
                     <div class="input-group">
                         <label>CT Ratio</label>
-                        <input type="text" id="ctRatio" value="2000:5">
+                        <input type="text" id="ctRatio" value="2000:5" placeholder="2000:5">
                     </div>
                     <div class="input-group">
                         <label>Accuracy Class</label>
@@ -136,19 +456,19 @@
                         </select>
                     </div>
                     <div class="input-group">
-                        <label>Secondary R (Ω)</label>
+                        <label>Secondary Winding R (Ω)</label>
                         <input type="number" id="Rs" value="0.5" step="0.01">
                     </div>
                     <div class="input-group">
                         <label>Rated Secondary (A)</label>
-                        <input type="number" id="Isec_rated" value="5">
+                        <input type="number" id="Isec_rated" value="5" step="0.1">
                     </div>
                 </div>
 
                 <div class="section-title">Burden</div>
                 <div class="input-grid">
                     <div class="input-group">
-                        <label>Lead R (Ω)</label>
+                        <label>Lead Resistance (Ω)</label>
                         <input type="number" id="Rlead" value="0.2" step="0.01">
                     </div>
                     <div class="input-group">
@@ -160,7 +480,7 @@
                 <div class="section-title">Fault Conditions</div>
                 <div class="input-grid">
                     <div class="input-group">
-                        <label>Fault Current (A pri)</label>
+                        <label>Primary Fault Current (A)</label>
                         <input type="number" id="Ifault" value="20000" step="100">
                     </div>
                     <div class="input-group">
@@ -171,15 +491,19 @@
 
                 <div class="section-title">Safety Margin</div>
                 <div class="input-group">
-                    <label>Required SF</label>
+                    <label>Required Saturation Factor</label>
                     <input type="number" id="requiredSF" value="20" step="1">
                 </div>
+
+                <button onclick="calculate()" style="width:100%; margin-top:20px;">Calculate</button>
             </div>
 
-            <div>
+            <div class="card">
+                <h2>Results</h2>
+
                 <div class="status-banner ok" id="statusBanner">CT will NOT saturate</div>
 
-                <div class="result-grid">
+                <div class="result-summary">
                     <div class="result-card">
                         <div class="label">Secondary Current</div>
                         <div class="value" id="r_Isec">--</div>
@@ -196,7 +520,7 @@
                         <div class="unit">V</div>
                     </div>
                     <div class="result-card">
-                        <div class="label">V_sat (class)</div>
+                        <div class="label">V_sat (from class)</div>
                         <div class="value" id="r_Vsat">--</div>
                         <div class="unit">V</div>
                     </div>
@@ -208,24 +532,24 @@
                     <div class="result-card">
                         <div class="label">Max Fault Current</div>
                         <div class="value" id="r_Imax">--</div>
-                        <div class="unit">A (pri)</div>
+                        <div class="unit">A (primary)</div>
                     </div>
                 </div>
 
-                <div class="section-title" style="margin-top: var(--space-xl);">With DC Offset</div>
-                <div class="result-grid">
+                <h3>With DC Offset (Asymmetrical)</h3>
+                <div class="result-summary">
                     <div class="result-card">
                         <div class="label">Asymmetry Factor</div>
                         <div class="value" id="r_asym">--</div>
                         <div class="unit"></div>
                     </div>
                     <div class="result-card">
-                        <div class="label">V_req (asym)</div>
+                        <div class="label">Required V_sec (asym)</div>
                         <div class="value" id="r_Vreq_asym">--</div>
                         <div class="unit">V</div>
                     </div>
                     <div class="result-card">
-                        <div class="label">SF (asym)</div>
+                        <div class="label">Saturation Factor (asym)</div>
                         <div class="value" id="r_SF_asym">--</div>
                         <div class="unit"></div>
                     </div>
@@ -238,37 +562,104 @@
             </div>
         </div>
 
-        <div class="drawer-trigger" id="stepToggle">See formulas →</div>
-        <div class="step-content" id="stepContent"></div>
+        <details class="show-work">
+            <summary>Show Formulas</summary>
+            <div class="show-work-content" id="formulas"></div>
+        </details>
     </div>
 
     <script>
+
+        function validateNumber(value, min, max, fieldName) {
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+                return { valid: false, error: `${fieldName} must be a valid number` };
+            }
+            if (min !== null && num < min) {
+                return { valid: false, error: `${fieldName} must be >= ${min}` };
+            }
+            if (max !== null && num > max) {
+                return { valid: false, error: `${fieldName} must be <= ${max}` };
+            }
+            return { valid: true, value: num };
+        }
+
+        function validatePositive(value, fieldName) {
+            const result = validateNumber(value, 0.0001, null, fieldName);
+            if (!result.valid) return result;
+            if (result.value <= 0) {
+                return { valid: false, error: `${fieldName} must be positive` };
+            }
+            return result;
+        }
+
+        function validateNonNegative(value, fieldName) {
+            return validateNumber(value, 0, null, fieldName);
+        }
+
+        function showError(message) {
+            alert('Input Error: ' + message);
+        }
+
+        function formatEngineering(value, decimals = 4) {
+            if (Math.abs(value) === 0) return '0';
+            if (Math.abs(value) >= 1e6) return (value / 1e6).toFixed(decimals) + ' M';
+            if (Math.abs(value) >= 1e3) return (value / 1e3).toFixed(decimals) + ' k';
+            if (Math.abs(value) >= 1) return value.toFixed(decimals);
+            if (Math.abs(value) >= 1e-3) return (value * 1e3).toFixed(decimals) + ' m';
+            if (Math.abs(value) >= 1e-6) return (value * 1e6).toFixed(decimals) + ' μ';
+            return value.toExponential(decimals);
+        }
+
+        function formatAngle(degrees) {
+            return degrees.toFixed(2) + '°';
+        }
+
+        function formatComplex(re, im, decimals = 4) {
+            const sign = im >= 0 ? '+' : '-';
+            return `${re.toFixed(decimals)} ${sign} j${Math.abs(im).toFixed(decimals)}`;
+        }
+
+        function formatPolar(mag, angDeg, decimals = 4) {
+            return `${mag.toFixed(decimals)} ∠ ${angDeg.toFixed(2)}°`;
+        }
+    
         function calculate() {
+            // Parse CT ratio
             const ratioStr = document.getElementById('ctRatio').value;
             const ratioParts = ratioStr.split(':').map(s => parseFloat(s.trim()));
             const CTR = ratioParts[0] / ratioParts[1];
 
+            // Get inputs
             const accuracy = document.getElementById('accuracy').value;
-            const Vsat = parseFloat(accuracy.replace('C', ''));
+            const Vsat = parseFloat(accuracy.replace('C', ''));  // C200 → 200V
             const Rs = parseFloat(document.getElementById('Rs').value);
+            const Isec_rated = parseFloat(document.getElementById('Isec_rated').value);
             const Rlead = parseFloat(document.getElementById('Rlead').value);
             const Rrelay = parseFloat(document.getElementById('Rrelay').value);
             const Ifault = parseFloat(document.getElementById('Ifault').value);
             const XR = parseFloat(document.getElementById('XR').value);
             const requiredSF = parseFloat(document.getElementById('requiredSF').value);
 
+            // Calculations
             const Isec = Ifault / CTR;
             const Zb = Rs + Rlead + Rrelay;
             const Vreq = Isec * Zb;
             const SF = Vsat / Vreq;
 
+            // Max fault current before saturation
             const Imax_sec = Vsat / Zb;
             const Imax_pri = Imax_sec * CTR;
 
+            // Asymmetrical factor (worst case at t=0)
+            // K = 1 + X/R (conservative approximation)
             const K_asym = 1 + XR;
             const Vreq_asym = Vreq * K_asym;
             const SF_asym = Vsat / Vreq_asym;
 
+            // Time to saturate (approximate)
+            // T_sat ≈ (X/R) × ln((V_sat / V_req) / (X/R)) / (2πf)
+            // In cycles: T_cycles ≈ (X/R) × ln(SF / (X/R))
             let T_sat_cycles = '--';
             if (SF > 1 && XR > 0) {
                 const ratio = Vsat / Vreq;
@@ -281,6 +672,7 @@
                 }
             }
 
+            // Update results
             document.getElementById('r_Isec').textContent = Isec.toFixed(2);
             document.getElementById('r_Zb').textContent = Zb.toFixed(3);
             document.getElementById('r_Vreq').textContent = Vreq.toFixed(2);
@@ -290,10 +682,10 @@
             sfEl.textContent = SF.toFixed(2);
             sfEl.className = 'value ' + (SF >= requiredSF ? 'ok' : (SF >= 10 ? 'warning' : 'error'));
 
-            document.getElementById('r_Imax').textContent = (Imax_pri / 1000).toFixed(1) + 'k';
+            document.getElementById('r_Imax').textContent = (Imax_pri / 1000).toFixed(2) + 'k';
 
             document.getElementById('r_asym').textContent = K_asym.toFixed(2);
-            document.getElementById('r_Vreq_asym').textContent = Vreq_asym.toFixed(0);
+            document.getElementById('r_Vreq_asym').textContent = Vreq_asym.toFixed(2);
 
             const sfAsymEl = document.getElementById('r_SF_asym');
             sfAsymEl.textContent = SF_asym.toFixed(2);
@@ -301,45 +693,74 @@
 
             document.getElementById('r_Tsat').textContent = T_sat_cycles;
 
+            // Status banner
             const banner = document.getElementById('statusBanner');
             if (SF_asym >= requiredSF) {
-                banner.textContent = 'CT will NOT saturate';
+                banner.textContent = 'CT will NOT saturate (adequate margin)';
                 banner.className = 'status-banner ok';
             } else if (SF_asym >= 1) {
-                banner.textContent = 'May saturate under asymmetrical conditions';
+                banner.textContent = 'CT may saturate under asymmetrical conditions';
                 banner.className = 'status-banner warning';
             } else {
-                banner.textContent = 'CT WILL SATURATE';
+                banner.textContent = 'CT WILL SATURATE - inadequate for this fault level';
                 banner.className = 'status-banner error';
             }
 
-            document.getElementById('stepContent').innerHTML = `
-<div class="step-section">
-<div class="step-title">Calculations</div>
-<div class="calc-line">CT Ratio: ${ratioStr} (CTR = ${CTR})</div>
-<div class="calc-line">V_sat: ${Vsat} V (from ${accuracy})</div>
-<div class="calc-line">Z_burden = ${Rs} + ${Rlead} + ${Rrelay} = ${Zb.toFixed(4)} Ω</div>
-<div class="calc-line">I_sec = ${Ifault} / ${CTR} = ${Isec.toFixed(4)} A</div>
-<div class="calc-line">V_req = ${Isec.toFixed(4)} × ${Zb.toFixed(4)} = ${Vreq.toFixed(4)} V</div>
-<div class="calc-line calc-result">SF = ${Vsat} / ${Vreq.toFixed(2)} = ${SF.toFixed(4)}</div>
-</div>
-<div class="step-section">
-<div class="step-title">Asymmetrical Analysis</div>
-<div class="calc-line">K_asym = 1 + X/R = 1 + ${XR} = ${K_asym}</div>
-<div class="calc-line">V_req_asym = ${Vreq.toFixed(2)} × ${K_asym} = ${Vreq_asym.toFixed(2)} V</div>
-<div class="calc-line calc-result">SF_asym = ${Vsat} / ${Vreq_asym.toFixed(2)} = ${SF_asym.toFixed(4)}</div>
-</div>
-            `;
+            // Formulas
+            const formulas = `CT Saturation Analysis:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Given:
+  CT Ratio: ${ratioStr} (CTR = ${CTR})
+  Accuracy Class: ${accuracy} (V_sat = ${Vsat} V at 20× rated current)
+  Secondary Winding R: ${Rs} Ω
+  Lead Resistance: ${Rlead} Ω
+  Relay Burden: ${Rrelay} Ω
+  Primary Fault Current: ${Ifault} A
+  X/R Ratio: ${XR}
+
+Calculations:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Secondary Current:
+  I_sec = I_fault / CTR = ${Ifault} / ${CTR} = ${Isec.toFixed(4)} A
+
+Total Burden:
+  Z_b = R_s + R_lead + R_relay
+  Z_b = ${Rs} + ${Rlead} + ${Rrelay} = ${Zb.toFixed(4)} Ω
+
+Required Secondary Voltage (Symmetrical):
+  V_req = I_sec × Z_b = ${Isec.toFixed(4)} × ${Zb.toFixed(4)} = ${Vreq.toFixed(4)} V
+
+Saturation Factor (Symmetrical):
+  SF = V_sat / V_req = ${Vsat} / ${Vreq.toFixed(4)} = ${SF.toFixed(4)}
+
+Maximum Fault Current (before saturation):
+  I_max_sec = V_sat / Z_b = ${Vsat} / ${Zb.toFixed(4)} = ${Imax_sec.toFixed(2)} A
+  I_max_pri = I_max_sec × CTR = ${(Imax_pri).toFixed(0)} A
+
+Asymmetrical Analysis:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Asymmetry Factor (worst case):
+  K = 1 + X/R = 1 + ${XR} = ${K_asym}
+
+Required Voltage (Asymmetrical):
+  V_req_asym = V_req × K = ${Vreq.toFixed(4)} × ${K_asym} = ${Vreq_asym.toFixed(4)} V
+
+Saturation Factor (Asymmetrical):
+  SF_asym = V_sat / V_req_asym = ${Vsat} / ${Vreq_asym.toFixed(4)} = ${SF_asym.toFixed(4)}
+
+IEEE C37.110 Recommendations:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Saturation Factor ≥ 20 for relay coordination
+• V_sat ≥ 20 × I_sec × (R_s + R_lead + R_relay) for no saturation
+• Consider X/R ratio for transient response`;
+
+            document.getElementById('formulas').textContent = formulas;
         }
 
-        document.querySelectorAll('input, select').forEach(el => {
-            el.addEventListener('input', calculate);
-        });
-
-        document.getElementById('stepToggle').addEventListener('click', () => {
-            document.getElementById('stepContent').classList.toggle('open');
-        });
-
+        // Initial calculation
         calculate();
     </script>
 </body>

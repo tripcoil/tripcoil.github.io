@@ -4,159 +4,412 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TCC Curve Plotter</title>
-    <link rel="stylesheet" href="tokens.css">
     <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2, h3, h4 {
+            color: #e2e8f0;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        h3 {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button.secondary {
+            background: #334155;
+            border: 1px solid #475569;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .unit {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-left: 4px;
+        }
+
+        .results {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .results .value {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .results .success {
+            color: #10b981;
+        }
+
+        .results .warning {
+            color: #f59e0b;
+        }
+
+        .results .error {
+            color: #ef4444;
+        }
+
+        .show-work {
+            margin-top: 16px;
+        }
+
+        .show-work summary {
+            cursor: pointer;
+            color: #3b82f6;
+            font-size: 0.875rem;
+            padding: 8px 0;
+        }
+
+        .show-work summary:hover {
+            text-decoration: underline;
+        }
+
+        .show-work-content {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+        }
+
+        canvas {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            display: block;
+            max-width: 100%;
+        }
+
+        .canvas-container {
+            position: relative;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 1px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+
+        .back-link:hover {
+            color: #3b82f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #475569;
+        }
+
+        th {
+            background: #0f172a;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .card {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            .results, .show-work-content {
+                background: #f5f5f5;
+                border: 1px solid #ccc;
+            }
+            canvas {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            button, .back-link {
+                display: none;
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .input-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    
         .main-layout {
             display: grid;
             grid-template-columns: 350px 1fr;
-            gap: var(--space-lg);
+            gap: 20px;
         }
-
-        .controls-panel {
-            padding: var(--space-lg);
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
-        }
-
-        .section-title {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: var(--space-lg) 0 var(--space-md) 0;
-            padding-bottom: var(--space-sm);
-            border-bottom: 1px solid var(--bg-hover);
-        }
-
-        .section-title:first-child {
-            margin-top: 0;
-        }
-
-        .input-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-md);
-        }
-
         .curves-list {
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
         }
-
         .curve-item {
-            background: var(--bg);
-            border-radius: var(--radius-sm);
-            padding: var(--space-md);
-            margin-bottom: var(--space-sm);
+            background: #0f172a;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 8px;
         }
-
         .curve-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: var(--space-sm);
+            margin-bottom: 8px;
         }
-
         .curve-header .name {
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: var(--space-sm);
+            gap: 8px;
         }
-
         .curve-color {
             width: 16px;
             height: 16px;
             border-radius: 2px;
         }
-
         .curve-params {
-            font-size: 0.75rem;
-            color: var(--text-muted);
+            font-size: 0.8rem;
+            color: #94a3b8;
         }
-
-        .remove-btn {
-            padding: var(--space-xs) var(--space-sm);
-            background: transparent;
-            border: 1px solid var(--bg-hover);
-            border-radius: var(--radius-sm);
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
-        .remove-btn:hover {
-            background: rgba(255, 69, 58, 0.1);
-            border-color: var(--error);
-            color: var(--error);
-        }
-
-        .add-btn {
-            width: 100%;
-            margin-top: var(--space-md);
-            padding: var(--space-md);
-            background: var(--text);
-            border: none;
-            border-radius: var(--radius-sm);
-            color: var(--bg);
+        .section-title {
+            font-size: 0.875rem;
             font-weight: 600;
-            cursor: pointer;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 16px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #475569;
         }
-
-        .add-btn:hover {
-            opacity: 0.9;
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
-
-        .clear-btn {
-            width: 100%;
-            margin-top: var(--space-sm);
-            padding: var(--space-sm);
-            background: transparent;
-            border: 1px solid var(--bg-hover);
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            cursor: pointer;
-        }
-
-        .clear-btn:hover {
-            border-color: var(--text-secondary);
-        }
-
-        .plot-container {
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
-            padding: var(--space-lg);
-        }
-
         #tccCanvas {
             width: 100%;
             max-width: 800px;
-            background: var(--bg);
-            border-radius: var(--radius-sm);
         }
-
         .export-btn {
-            margin-top: var(--space-md);
-            padding: var(--space-sm) var(--space-md);
-            background: transparent;
-            border: 1px solid var(--bg-hover);
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            cursor: pointer;
+            margin-top: 12px;
         }
-
-        .export-btn:hover {
-            border-color: var(--text-secondary);
-        }
-
-        input[type="color"] {
-            padding: 0;
-            width: 100%;
-            height: 38px;
-            border: 1px solid var(--bg-hover);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-        }
-
         @media (max-width: 900px) {
             .main-layout {
                 grid-template-columns: 1fr;
@@ -166,17 +419,12 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <a href="/random/" class="header-back">← Relay Tools</a>
-            <span class="header-title">TCC Curves</span>
-        </header>
-
+        <a href="index.html" class="back-link">← Back to Tools</a>
         <h1>TCC Curve Plotter</h1>
-        <p class="tagline">Plot time-current characteristic curves for overcurrent relays</p>
 
         <div class="main-layout">
-            <div class="controls-panel">
-                <div class="section-title">Add Curve</div>
+            <div class="card">
+                <h2>Add Curve</h2>
 
                 <div class="input-group">
                     <label>Curve Name</label>
@@ -213,29 +461,31 @@
                     </div>
                     <div class="input-group">
                         <label>Color</label>
-                        <input type="color" id="curveColor" value="#0a84ff">
+                        <input type="color" id="curveColor" value="#3b82f6">
                     </div>
                 </div>
 
-                <button class="add-btn" onclick="addCurve()">Add Curve</button>
+                <button onclick="addCurve()" style="width:100%; margin-top:16px;">Add Curve</button>
 
                 <div class="section-title">Curves</div>
                 <div class="curves-list" id="curvesList"></div>
 
-                <button class="clear-btn" onclick="clearCurves()">Clear All</button>
+                <button class="secondary" onclick="clearCurves()" style="width:100%; margin-top:12px;">Clear All</button>
             </div>
 
-            <div class="plot-container">
+            <div class="card">
+                <h2>Time-Current Characteristic</h2>
                 <canvas id="tccCanvas" width="800" height="700"></canvas>
-                <button class="export-btn" onclick="exportPNG()">Export as PNG</button>
+                <button class="secondary export-btn" onclick="exportPNG()">Export as PNG</button>
             </div>
         </div>
 
-        <div class="drawer-trigger" id="stepToggle">See formulas →</div>
-        <div class="step-content" id="stepContent">
-<div class="step-section">
-<div class="step-title">IEEE C37.112-2018 Inverse-Time Equations</div>
-<pre>
+        <details class="show-work">
+            <summary>Show Formulas</summary>
+            <div class="show-work-content">
+IEEE C37.112-2018 Inverse-Time Equations:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 t = TD × (A / (M^p - 1) + B)
 
 Where:
@@ -243,31 +493,82 @@ Where:
   TD = Time dial setting
   M  = Multiple of pickup (I/Ipickup)
   A, B, p = Curve constants
-</pre>
-</div>
-<div class="step-section">
-<div class="step-title">IEEE Curve Constants</div>
-<pre>
+
+IEEE Curve Constants:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Moderately Inverse (MI):  A=0.0515,  B=0.114,  p=0.02
 Very Inverse (VI):        A=19.61,   B=0.491,  p=2.0
 Extremely Inverse (EI):   A=28.2,    B=0.1217, p=2.0
 Short-Time Inverse (SI):  A=0.00262, B=0.00342,p=0.02
 Long-Time Inverse (LTI):  A=5.95,    B=0.180,  p=2.0
 Long-Time EI (LTEI):      A=5.67,    B=0.352,  p=2.0
-</pre>
-</div>
-<div class="step-section">
-<div class="step-title">IEC 60255 Curve Constants</div>
-<pre>
+
+IEC 60255 Curve Constants:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Standard Inverse (A):     A=0.14,  B=0, p=0.02
 Very Inverse (B):         A=13.5,  B=0, p=1.0
 Extremely Inverse (C):    A=80,    B=0, p=2.0
-</pre>
-</div>
-        </div>
+            </div>
+        </details>
     </div>
 
     <script>
+
+        function validateNumber(value, min, max, fieldName) {
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+                return { valid: false, error: `${fieldName} must be a valid number` };
+            }
+            if (min !== null && num < min) {
+                return { valid: false, error: `${fieldName} must be >= ${min}` };
+            }
+            if (max !== null && num > max) {
+                return { valid: false, error: `${fieldName} must be <= ${max}` };
+            }
+            return { valid: true, value: num };
+        }
+
+        function validatePositive(value, fieldName) {
+            const result = validateNumber(value, 0.0001, null, fieldName);
+            if (!result.valid) return result;
+            if (result.value <= 0) {
+                return { valid: false, error: `${fieldName} must be positive` };
+            }
+            return result;
+        }
+
+        function validateNonNegative(value, fieldName) {
+            return validateNumber(value, 0, null, fieldName);
+        }
+
+        function showError(message) {
+            alert('Input Error: ' + message);
+        }
+
+        function formatEngineering(value, decimals = 4) {
+            if (Math.abs(value) === 0) return '0';
+            if (Math.abs(value) >= 1e6) return (value / 1e6).toFixed(decimals) + ' M';
+            if (Math.abs(value) >= 1e3) return (value / 1e3).toFixed(decimals) + ' k';
+            if (Math.abs(value) >= 1) return value.toFixed(decimals);
+            if (Math.abs(value) >= 1e-3) return (value * 1e3).toFixed(decimals) + ' m';
+            if (Math.abs(value) >= 1e-6) return (value * 1e6).toFixed(decimals) + ' μ';
+            return value.toExponential(decimals);
+        }
+
+        function formatAngle(degrees) {
+            return degrees.toFixed(2) + '°';
+        }
+
+        function formatComplex(re, im, decimals = 4) {
+            const sign = im >= 0 ? '+' : '-';
+            return `${re.toFixed(decimals)} ${sign} j${Math.abs(im).toFixed(decimals)}`;
+        }
+
+        function formatPolar(mag, angDeg, decimals = 4) {
+            return `${mag.toFixed(decimals)} ∠ ${angDeg.toFixed(2)}°`;
+        }
+    
+        // IEEE C37.112-2018 curve constants
         const CURVE_CONSTANTS = {
             'MI':   { A: 0.0515,  B: 0.114,   p: 0.02, name: 'Moderately Inverse' },
             'VI':   { A: 19.61,   B: 0.491,   p: 2.0,  name: 'Very Inverse' },
@@ -321,7 +622,7 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
                             <span class="curve-color" style="background:${curve.color}"></span>
                             ${curve.name}
                         </span>
-                        <button class="remove-btn" onclick="removeCurve(${i})">✕</button>
+                        <button class="secondary" onclick="removeCurve(${i})" style="padding:4px 8px;">✕</button>
                     </div>
                     <div class="curve-params">
                         ${CURVE_CONSTANTS[curve.type].name} | Pickup: ${curve.pickup}A | TD: ${curve.timeDial} | CT: ${curve.ctRatio}
@@ -335,12 +636,14 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
             const ctx = canvas.getContext('2d');
             const w = canvas.width, h = canvas.height;
 
+            // Log-log scale parameters
             const margin = { top: 40, right: 40, bottom: 60, left: 80 };
             const plotW = w - margin.left - margin.right;
             const plotH = h - margin.top - margin.bottom;
 
-            const xMin = 1, xMax = 10000;
-            const yMin = 0.01, yMax = 1000;
+            // Axis ranges (log scale)
+            const xMin = 1, xMax = 10000;      // Current in Amps
+            const yMin = 0.01, yMax = 1000;   // Time in seconds
 
             const logXMin = Math.log10(xMin), logXMax = Math.log10(xMax);
             const logYMin = Math.log10(yMin), logYMax = Math.log10(yMax);
@@ -348,12 +651,15 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
             function xToPixel(x) { return margin.left + (Math.log10(x) - logXMin) / (logXMax - logXMin) * plotW; }
             function yToPixel(y) { return margin.top + (1 - (Math.log10(y) - logYMin) / (logYMax - logYMin)) * plotH; }
 
-            ctx.fillStyle = '#000';
+            // Background
+            ctx.fillStyle = '#0f172a';
             ctx.fillRect(0, 0, w, h);
 
-            ctx.strokeStyle = '#1d1d1f';
+            // Grid lines (log scale)
+            ctx.strokeStyle = '#334155';
             ctx.lineWidth = 0.5;
 
+            // X grid (decades and sub-decades)
             for (let decade = Math.floor(logXMin); decade <= Math.ceil(logXMax); decade++) {
                 for (let sub = 1; sub < 10; sub++) {
                     const x = Math.pow(10, decade) * sub;
@@ -367,6 +673,7 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
                 }
             }
 
+            // Y grid
             for (let decade = Math.floor(logYMin); decade <= Math.ceil(logYMax); decade++) {
                 for (let sub = 1; sub < 10; sub++) {
                     const y = Math.pow(10, decade) * sub;
@@ -380,7 +687,8 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
                 }
             }
 
-            ctx.strokeStyle = '#3a3a3c';
+            // Axes
+            ctx.strokeStyle = '#475569';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(margin.left, margin.top);
@@ -388,10 +696,12 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
             ctx.lineTo(w - margin.right, h - margin.bottom);
             ctx.stroke();
 
-            ctx.fillStyle = '#86868b';
+            // Axis labels
+            ctx.fillStyle = '#94a3b8';
             ctx.font = '11px -apple-system, sans-serif';
             ctx.textAlign = 'center';
 
+            // X axis labels
             for (let decade = Math.floor(logXMin); decade <= Math.ceil(logXMax); decade++) {
                 const x = Math.pow(10, decade);
                 if (x >= xMin && x <= xMax) {
@@ -400,6 +710,7 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
                 }
             }
 
+            // Y axis labels
             ctx.textAlign = 'right';
             for (let decade = Math.floor(logYMin); decade <= Math.ceil(logYMax); decade++) {
                 const y = Math.pow(10, decade);
@@ -409,7 +720,8 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
                 }
             }
 
-            ctx.fillStyle = '#fff';
+            // Axis titles
+            ctx.fillStyle = '#e2e8f0';
             ctx.font = '12px -apple-system, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('Current (Amps)', margin.left + plotW/2, h - 15);
@@ -420,6 +732,7 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
             ctx.fillText('Time (Seconds)', 0, 0);
             ctx.restore();
 
+            // Draw curves
             curves.forEach(curve => {
                 const { A, B, p } = CURVE_CONSTANTS[curve.type];
                 const pickup = curve.pickup * curve.ctRatio;
@@ -449,6 +762,7 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
                 }
                 ctx.stroke();
 
+                // Draw pickup line (vertical dashed)
                 ctx.setLineDash([5, 5]);
                 ctx.beginPath();
                 ctx.moveTo(xToPixel(pickup), margin.top);
@@ -457,7 +771,8 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
                 ctx.setLineDash([]);
             });
 
-            ctx.fillStyle = '#fff';
+            // Title
+            ctx.fillStyle = '#e2e8f0';
             ctx.font = 'bold 14px -apple-system, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('Time-Current Characteristic Curves', w/2, 25);
@@ -471,10 +786,7 @@ Extremely Inverse (C):    A=80,    B=0, p=2.0
             link.click();
         }
 
-        document.getElementById('stepToggle').addEventListener('click', () => {
-            document.getElementById('stepContent').classList.toggle('open');
-        });
-
+        // Initial draw
         drawTCC();
     </script>
 </body>

@@ -3,175 +3,457 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Synchroscope Trainer</title>
-    <link rel="stylesheet" href="tokens.css">
+    <title>Synchroscope Training Tool</title>
     <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
         .container {
-            max-width: 800px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
         }
 
-        .scope-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: var(--space-xl);
+        h1, h2, h3, h4 {
+            color: #e2e8f0;
+            margin-bottom: 16px;
         }
 
-        #scopeCanvas {
-            width: 100%;
-            max-width: 400px;
-            height: auto;
-            aspect-ratio: 1;
-        }
-
-        .sync-status {
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            padding: var(--space-lg);
-            border-radius: var(--radius-md);
-            font-size: 1.1rem;
+        h1 {
+            font-size: 1.75rem;
             font-weight: 600;
-            margin-top: var(--space-lg);
-            transition: all var(--transition-normal);
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
         }
 
-        .sync-status.synced {
-            background: rgba(48, 209, 88, 0.15);
-            color: var(--success);
-            box-shadow: 0 0 30px rgba(48, 209, 88, 0.2);
-        }
-
-        .sync-status.not-synced {
-            background: rgba(255, 69, 58, 0.1);
-            color: var(--error);
-        }
-
-        .status-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--space-md);
-            margin-bottom: var(--space-xl);
-        }
-
-        .status-item {
-            text-align: center;
-            padding: var(--space-lg);
-            background: var(--bg-subtle);
-            border-radius: var(--radius-sm);
-        }
-
-        .status-label {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-bottom: var(--space-sm);
-        }
-
-        .status-value {
-            font-size: 1.5rem;
+        h2 {
+            font-size: 1.25rem;
             font-weight: 600;
-            font-family: var(--font-mono);
+            color: #3b82f6;
         }
 
-        .status-value.ok { color: var(--success); }
-        .status-value.warning { color: var(--warning); }
-        .status-value.error { color: var(--error); }
+        h3 {
+            font-size: 1rem;
+            font-weight: 500;
+        }
 
-        .controls-grid {
+        .card {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-xl);
+            gap: 20px;
         }
 
-        .control-section {
-            padding: var(--space-lg);
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         }
 
-        .control-section h3 {
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        label {
+            display: block;
             font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-bottom: var(--space-lg);
-            text-align: center;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 4px;
         }
 
-        .control-section.bus h3 { color: var(--phase-a); }
-        .control-section.gen h3 { color: var(--phase-c); }
-
-        .slider-group {
-            margin-bottom: var(--space-lg);
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            font-family: 'Consolas', 'Monaco', monospace;
         }
 
-        .slider-group:last-child {
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button.secondary {
+            background: #334155;
+            border: 1px solid #475569;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .input-row .input-group {
+            flex: 1;
             margin-bottom: 0;
         }
 
-        .slider-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: var(--space-sm);
+        .unit {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-left: 4px;
+        }
+
+        .results {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', monospace;
             font-size: 0.875rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
         }
 
-        .slider-value {
-            font-family: var(--font-mono);
-            color: var(--text);
+        .results .value {
+            color: #3b82f6;
+            font-weight: 600;
         }
 
-        .waveform-container {
-            margin-top: var(--space-xl);
+        .results .success {
+            color: #10b981;
         }
 
-        #waveCanvas {
-            width: 100%;
-            height: 200px;
-            border-radius: var(--radius-md);
+        .results .warning {
+            color: #f59e0b;
+        }
+
+        .results .error {
+            color: #ef4444;
+        }
+
+        .show-work {
+            margin-top: 16px;
+        }
+
+        .show-work summary {
+            cursor: pointer;
+            color: #3b82f6;
+            font-size: 0.875rem;
+            padding: 8px 0;
+        }
+
+        .show-work summary:hover {
+            text-decoration: underline;
+        }
+
+        .show-work-content {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+        }
+
+        canvas {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            display: block;
+            max-width: 100%;
+        }
+
+        .canvas-container {
+            position: relative;
         }
 
         .legend {
             display: flex;
-            justify-content: center;
-            gap: var(--space-lg);
-            margin-top: var(--space-md);
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 12px;
             font-size: 0.8rem;
-            color: var(--text-secondary);
         }
 
         .legend-item {
             display: flex;
             align-items: center;
-            gap: var(--space-sm);
+            gap: 6px;
         }
 
-        .legend-dot {
-            width: 12px;
+        .legend-color {
+            width: 16px;
             height: 3px;
-            border-radius: 2px;
+            border-radius: 1px;
         }
 
-        .guidelines {
-            margin-top: var(--space-xl);
-            padding: var(--space-lg);
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+            text-decoration: none;
             font-size: 0.875rem;
-            color: var(--text-secondary);
-            line-height: 1.8;
+            margin-bottom: 16px;
         }
 
-        .guidelines h4 {
-            color: var(--text);
+        .back-link:hover {
+            color: #3b82f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 0.875rem;
-            margin-bottom: var(--space-md);
         }
 
-        @media (max-width: 600px) {
-            .controls-grid {
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #475569;
+        }
+
+        th {
+            background: #0f172a;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .card {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            .results, .show-work-content {
+                background: #f5f5f5;
+                border: 1px solid #ccc;
+            }
+            canvas {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            button, .back-link {
+                display: none;
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .input-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .grid-2, .grid-3 {
                 grid-template-columns: 1fr;
             }
-
-            .status-row {
+        }
+    
+        .scope-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .scope-card {
+            text-align: center;
+        }
+        .scope-card h3 {
+            margin-bottom: 12px;
+            color: #94a3b8;
+        }
+        .status-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+            padding: 16px;
+            background: #0f172a;
+            border-radius: 8px;
+        }
+        .status-item {
+            text-align: center;
+        }
+        .status-item label {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        .status-item .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            font-family: 'Consolas', monospace;
+        }
+        .status-item .value.ok { color: #10b981; }
+        .status-item .value.warning { color: #f59e0b; }
+        .status-item .value.error { color: #ef4444; }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .control-section h3 {
+            color: #94a3b8;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #475569;
+        }
+        .control-section.running h3 {
+            color: #ef4444;
+        }
+        .control-section.incoming h3 {
+            color: #3b82f6;
+        }
+        .slider-group {
+            margin-bottom: 16px;
+        }
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .slider-header .value {
+            font-family: 'Consolas', monospace;
+            color: #3b82f6;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #0f172a;
+            border-radius: 3px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .sync-indicator {
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .sync-indicator.synced {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid #10b981;
+            color: #10b981;
+        }
+        .sync-indicator.not-synced {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid #ef4444;
+            color: #ef4444;
+        }
+        @media (max-width: 900px) {
+            .scope-layout, .controls-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -179,95 +461,109 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <a href="/random/" class="header-back">← Relay Tools</a>
-            <span class="header-title">Synchroscope</span>
-        </header>
+        <a href="index.html" class="back-link">← Back to Tools</a>
+        <h1>Synchroscope Training Tool</h1>
 
-        <h1>Synchroscope</h1>
-        <p class="tagline">Practice generator synchronization timing</p>
-
-        <div class="scope-container">
-            <canvas id="scopeCanvas" width="400" height="400"></canvas>
-            <div class="sync-status not-synced" id="syncStatus">
-                NOT IN SYNC
-            </div>
-        </div>
-
-        <div class="status-row">
-            <div class="status-item">
-                <div class="status-label">Slip Frequency</div>
-                <div class="status-value" id="slipFreq">0.00 Hz</div>
-            </div>
-            <div class="status-item">
-                <div class="status-label">Phase Angle</div>
-                <div class="status-value" id="phaseAngle">0°</div>
-            </div>
-            <div class="status-item">
-                <div class="status-label">Voltage Difference</div>
-                <div class="status-value" id="voltDiff">0%</div>
-            </div>
-        </div>
-
-        <div class="controls-grid">
-            <div class="control-section bus">
-                <h3>Bus (Running)</h3>
-                <div class="slider-group">
-                    <div class="slider-header">
-                        <span>Voltage</span>
-                        <span class="slider-value"><span id="mag1Value">115</span> kV</span>
+        <div class="card">
+            <div class="scope-layout">
+                <div class="scope-card">
+                    <h3>Synchroscope</h3>
+                    <canvas id="scopeCanvas" width="350" height="350"></canvas>
+                </div>
+                <div class="scope-card">
+                    <h3>Voltage Waveforms</h3>
+                    <canvas id="waveCanvas" width="400" height="300"></canvas>
+                    <div class="legend" style="justify-content: center;">
+                        <div class="legend-item"><div class="legend-color" style="background:#ef4444"></div>Running (Bus)</div>
+                        <div class="legend-item"><div class="legend-color" style="background:#3b82f6"></div>Incoming (Gen)</div>
                     </div>
-                    <input type="range" id="mag1" min="100" max="130" value="115">
-                </div>
-                <div class="slider-group">
-                    <div class="slider-header">
-                        <span>Frequency</span>
-                        <span class="slider-value"><span id="freq1Value">60.00</span> Hz</span>
-                    </div>
-                    <input type="range" id="freq1" min="59" max="61" step="0.01" value="60">
                 </div>
             </div>
 
-            <div class="control-section gen">
-                <h3>Generator (Incoming)</h3>
-                <div class="slider-group">
-                    <div class="slider-header">
-                        <span>Voltage</span>
-                        <span class="slider-value"><span id="mag2Value">115</span> kV</span>
-                    </div>
-                    <input type="range" id="mag2" min="100" max="130" value="115">
+            <div class="status-panel">
+                <div class="status-item">
+                    <label>Slip Frequency</label>
+                    <div class="value" id="slipFreq">0.0 Hz</div>
                 </div>
-                <div class="slider-group">
-                    <div class="slider-header">
-                        <span>Frequency</span>
-                        <span class="slider-value"><span id="freq2Value">60.00</span> Hz</span>
+                <div class="status-item">
+                    <label>Phase Angle</label>
+                    <div class="value" id="phaseAngle">0°</div>
+                </div>
+                <div class="status-item">
+                    <label>Voltage Difference</label>
+                    <div class="value" id="voltDiff">0%</div>
+                </div>
+            </div>
+
+            <div class="sync-indicator not-synced" id="syncStatus">
+                NOT IN SYNC - DO NOT CLOSE BREAKER
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Controls</h2>
+            <div class="controls-grid">
+                <div class="control-section running">
+                    <h3>Running / Bus (Red)</h3>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Voltage</span>
+                            <span class="value"><span id="mag1Value">115</span> kV</span>
+                        </div>
+                        <input type="range" id="mag1" min="85" max="145" value="115">
                     </div>
-                    <input type="range" id="freq2" min="59" max="61" step="0.01" value="60">
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Frequency</span>
+                            <span class="value"><span id="freq1Value">60.0</span> Hz</span>
+                        </div>
+                        <input type="range" id="freq1" min="55" max="65" step="0.01" value="60">
+                    </div>
+                </div>
+
+                <div class="control-section incoming">
+                    <h3>Incoming / Generator (Blue)</h3>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Voltage</span>
+                            <span class="value"><span id="mag2Value">115</span> kV</span>
+                        </div>
+                        <input type="range" id="mag2" min="85" max="145" value="115">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Frequency</span>
+                            <span class="value"><span id="freq2Value">60.0</span> Hz</span>
+                        </div>
+                        <input type="range" id="freq2" min="55" max="65" step="0.01" value="60">
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="waveform-container">
-            <canvas id="waveCanvas"></canvas>
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-dot" style="background: var(--phase-a)"></div>
-                    Bus
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot" style="background: var(--phase-c)"></div>
-                    Generator
-                </div>
-            </div>
-        </div>
+        <details class="show-work">
+            <summary>Synchronizing Guidelines</summary>
+            <div class="show-work-content">
+Synchronizing Criteria (typical):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Slip Frequency: &lt; 0.067 Hz (4 seconds per revolution)
+• Phase Angle: Within ±10° of 0° (12 o'clock)
+• Voltage Difference: Within ±5%
 
-        <div class="guidelines">
-            <h4>Synchronizing Criteria</h4>
-            Slip Frequency: < 0.067 Hz (pointer completes rotation in > 15 seconds)<br>
-            Phase Angle: Within ±10° of 12 o'clock<br>
-            Voltage Difference: Within ±5%<br><br>
-            <strong>Tip:</strong> Adjust generator frequency to rotate slowly clockwise. Close breaker just before reaching 12 o'clock to account for closing time.
-        </div>
+Synchroscope Operation:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Pointer at 12 o'clock = 0° phase difference (IN SYNC)
+• Clockwise rotation = Incoming FAST (higher frequency)
+• Counter-clockwise = Incoming SLOW (lower frequency)
+
+Best Practice:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Match voltages within 5%
+2. Adjust incoming frequency to rotate slowly CLOCKWISE
+3. Close breaker just BEFORE reaching 12 o'clock
+4. This accounts for breaker closing time
+            </div>
+        </details>
     </div>
 
     <script>
@@ -276,77 +572,85 @@
         const waveCanvas = document.getElementById('waveCanvas');
         const waveCtx = waveCanvas.getContext('2d');
 
-        // Set canvas size
-        function resizeWaveCanvas() {
-            const rect = waveCanvas.getBoundingClientRect();
-            waveCanvas.width = rect.width * window.devicePixelRatio;
-            waveCanvas.height = 200 * window.devicePixelRatio;
-            waveCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
-        }
-        resizeWaveCanvas();
-        window.addEventListener('resize', resizeWaveCanvas);
-
         const centerX = scopeCanvas.width / 2;
         const centerY = scopeCanvas.height / 2;
-        const radius = 140;
+        const radius = 120;
 
-        let mag1 = 115, freq1 = 60, mag2 = 115, freq2 = 60;
+        // Inputs
+        const inputs = {
+            mag1: document.getElementById('mag1'),
+            freq1: document.getElementById('freq1'),
+            mag2: document.getElementById('mag2'),
+            freq2: document.getElementById('freq2')
+        };
 
-        // Input handlers
-        document.getElementById('mag1').addEventListener('input', e => {
-            mag1 = parseFloat(e.target.value);
-            document.getElementById('mag1Value').textContent = mag1;
-        });
-        document.getElementById('freq1').addEventListener('input', e => {
-            freq1 = parseFloat(e.target.value);
-            document.getElementById('freq1Value').textContent = freq1.toFixed(2);
-        });
-        document.getElementById('mag2').addEventListener('input', e => {
-            mag2 = parseFloat(e.target.value);
-            document.getElementById('mag2Value').textContent = mag2;
-        });
-        document.getElementById('freq2').addEventListener('input', e => {
-            freq2 = parseFloat(e.target.value);
-            document.getElementById('freq2Value').textContent = freq2.toFixed(2);
+        // Value displays
+        const values = {
+            mag1: document.getElementById('mag1Value'),
+            freq1: document.getElementById('freq1Value'),
+            mag2: document.getElementById('mag2Value'),
+            freq2: document.getElementById('freq2Value')
+        };
+
+        // Variables
+        let mag1 = parseFloat(inputs.mag1.value);
+        let freq1 = parseFloat(inputs.freq1.value);
+        let mag2 = parseFloat(inputs.mag2.value);
+        let freq2 = parseFloat(inputs.freq2.value);
+
+        // Update handlers
+        Object.keys(inputs).forEach(key => {
+            inputs[key].addEventListener('input', () => {
+                const val = parseFloat(inputs[key].value);
+                if (key.startsWith('mag')) {
+                    values[key].textContent = val.toFixed(0);
+                } else {
+                    values[key].textContent = val.toFixed(2);
+                }
+                if (key === 'mag1') mag1 = val;
+                if (key === 'freq1') freq1 = val;
+                if (key === 'mag2') mag2 = val;
+                if (key === 'freq2') freq2 = val;
+            });
         });
 
         let startTime = null;
 
-        function draw(timestamp) {
+        function drawSynchroscope(timestamp) {
             if (!startTime) startTime = timestamp;
             const time = (timestamp - startTime) / 1000;
 
-            // Clear
-            scopeCtx.fillStyle = '#000';
+            // Clear scope canvas
+            scopeCtx.fillStyle = '#0f172a';
             scopeCtx.fillRect(0, 0, scopeCanvas.width, scopeCanvas.height);
 
-            // Outer ring gradient
-            const gradient = scopeCtx.createRadialGradient(centerX, centerY, radius - 10, centerX, centerY, radius + 10);
-            gradient.addColorStop(0, '#1d1d1f');
-            gradient.addColorStop(1, '#2a2a2c');
+            // Draw outer ring
+            const gradient = scopeCtx.createRadialGradient(centerX, centerY, radius-10, centerX, centerY, radius+10);
+            gradient.addColorStop(0, '#1e293b');
+            gradient.addColorStop(1, '#334155');
             scopeCtx.beginPath();
             scopeCtx.arc(centerX, centerY, radius + 5, 0, 2 * Math.PI);
             scopeCtx.fillStyle = gradient;
             scopeCtx.fill();
 
-            // Inner circle
+            // Draw inner circle
             scopeCtx.beginPath();
             scopeCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-            scopeCtx.fillStyle = '#000';
+            scopeCtx.fillStyle = '#0f172a';
             scopeCtx.fill();
-            scopeCtx.strokeStyle = '#333';
-            scopeCtx.lineWidth = 1;
+            scopeCtx.strokeStyle = '#475569';
+            scopeCtx.lineWidth = 2;
             scopeCtx.stroke();
 
-            // Tick marks
-            scopeCtx.font = '11px -apple-system, sans-serif';
-            scopeCtx.fillStyle = '#86868b';
+            // Draw tick marks and labels
+            scopeCtx.font = 'bold 11px -apple-system, sans-serif';
+            scopeCtx.fillStyle = '#94a3b8';
             scopeCtx.textAlign = 'center';
             scopeCtx.textBaseline = 'middle';
 
             for (let deg = -180; deg <= 150; deg += 30) {
                 const rad = (90 - deg) * Math.PI / 180;
-                const tickLength = deg === 0 ? 20 : 10;
+                const tickLength = (deg === 0) ? 20 : 12;
 
                 const innerX = centerX + (radius - tickLength) * Math.cos(rad);
                 const innerY = centerY - (radius - tickLength) * Math.sin(rad);
@@ -356,23 +660,37 @@
                 scopeCtx.beginPath();
                 scopeCtx.moveTo(innerX, innerY);
                 scopeCtx.lineTo(outerX, outerY);
-                scopeCtx.strokeStyle = deg === 0 ? '#30d158' : '#48484a';
-                scopeCtx.lineWidth = deg === 0 ? 3 : 1;
+                scopeCtx.strokeStyle = deg === 0 ? '#10b981' : '#475569';
+                scopeCtx.lineWidth = deg === 0 ? 3 : 2;
                 scopeCtx.stroke();
 
                 // Label
-                const labelX = centerX + (radius + 20) * Math.cos(rad);
-                const labelY = centerY - (radius + 20) * Math.sin(rad);
+                const labelX = centerX + (radius + 22) * Math.cos(rad);
+                const labelY = centerY - (radius + 22) * Math.sin(rad);
                 scopeCtx.fillText(deg + '°', labelX, labelY);
             }
 
             // SLOW/FAST labels
-            scopeCtx.font = 'bold 12px -apple-system, sans-serif';
-            scopeCtx.fillStyle = '#86868b';
-            scopeCtx.fillText('SLOW', centerX - 60, centerY);
-            scopeCtx.fillText('FAST', centerX + 60, centerY);
+            scopeCtx.font = 'bold 14px -apple-system, sans-serif';
+            scopeCtx.fillStyle = '#f59e0b';
+            scopeCtx.fillText('SLOW', centerX - 80, centerY - 50);
+            scopeCtx.fillText('FAST', centerX + 80, centerY - 50);
 
-            // Calculate angle
+            // Draw curved arrows
+            scopeCtx.strokeStyle = '#f59e0b';
+            scopeCtx.lineWidth = 2;
+
+            // Slow arrow (CCW)
+            scopeCtx.beginPath();
+            scopeCtx.arc(centerX, centerY, radius - 40, Math.PI/2 + 0.3, Math.PI/2 + 0.8, false);
+            scopeCtx.stroke();
+
+            // Fast arrow (CW)
+            scopeCtx.beginPath();
+            scopeCtx.arc(centerX, centerY, radius - 40, Math.PI/2 - 0.8, Math.PI/2 - 0.3, false);
+            scopeCtx.stroke();
+
+            // Calculate relative angle
             const slipFreq = freq2 - freq1;
             const thetaRel = 2 * Math.PI * slipFreq * time;
             const displayAngle = thetaRel * 180 / Math.PI;
@@ -380,12 +698,12 @@
             const angleForDisplay = normalizedAngle > 180 ? normalizedAngle - 360 : normalizedAngle;
 
             // Pointer
-            const pointerAngle = Math.PI / 2 - thetaRel;
-            const pointerX = centerX + (radius - 25) * Math.cos(pointerAngle);
-            const pointerY = centerY - (radius - 25) * Math.sin(pointerAngle);
+            const pointerAngle = Math.PI/2 - thetaRel;
+            const pointerX = centerX + (radius - 30) * Math.cos(pointerAngle);
+            const pointerY = centerY - (radius - 30) * Math.sin(pointerAngle);
 
-            scopeCtx.strokeStyle = '#fff';
-            scopeCtx.lineWidth = 3;
+            scopeCtx.strokeStyle = '#ffffff';
+            scopeCtx.lineWidth = 4;
             scopeCtx.lineCap = 'round';
             scopeCtx.beginPath();
             scopeCtx.moveTo(centerX, centerY);
@@ -393,110 +711,115 @@
             scopeCtx.stroke();
 
             // Pointer tip
-            scopeCtx.fillStyle = '#fff';
+            const tipLen = 15;
+            const tipAngle = pointerAngle;
+            scopeCtx.fillStyle = '#ffffff';
             scopeCtx.beginPath();
             scopeCtx.moveTo(pointerX, pointerY);
             scopeCtx.lineTo(
-                pointerX - 12 * Math.cos(pointerAngle - 0.3),
-                pointerY + 12 * Math.sin(pointerAngle - 0.3)
+                pointerX - tipLen * Math.cos(tipAngle - 0.3),
+                pointerY + tipLen * Math.sin(tipAngle - 0.3)
             );
             scopeCtx.lineTo(
-                pointerX - 12 * Math.cos(pointerAngle + 0.3),
-                pointerY + 12 * Math.sin(pointerAngle + 0.3)
+                pointerX - tipLen * Math.cos(tipAngle + 0.3),
+                pointerY + tipLen * Math.sin(tipAngle + 0.3)
             );
             scopeCtx.closePath();
-            scopeCtx.fill();
-
-            // Center dot
-            scopeCtx.beginPath();
-            scopeCtx.arc(centerX, centerY, 6, 0, 2 * Math.PI);
-            scopeCtx.fillStyle = '#fff';
             scopeCtx.fill();
 
             // Draw waveforms
             drawWaveforms(time);
 
-            // Update status
+            // Update status displays
             const slipFreqAbs = Math.abs(slipFreq);
             const voltDiff = Math.abs(mag2 - mag1) / mag1 * 100;
             const angleAbs = Math.abs(angleForDisplay);
 
             document.getElementById('slipFreq').textContent = slipFreqAbs.toFixed(3) + ' Hz';
-            document.getElementById('slipFreq').className = 'status-value ' +
-                (slipFreqAbs < 0.067 ? 'ok' : slipFreqAbs < 0.2 ? 'warning' : 'error');
+            document.getElementById('slipFreq').className = 'value ' + (slipFreqAbs < 0.067 ? 'ok' : (slipFreqAbs < 0.2 ? 'warning' : 'error'));
 
             document.getElementById('phaseAngle').textContent = angleForDisplay.toFixed(1) + '°';
-            document.getElementById('phaseAngle').className = 'status-value ' +
-                (angleAbs < 10 ? 'ok' : angleAbs < 30 ? 'warning' : 'error');
+            document.getElementById('phaseAngle').className = 'value ' + (angleAbs < 10 ? 'ok' : (angleAbs < 30 ? 'warning' : 'error'));
 
             document.getElementById('voltDiff').textContent = voltDiff.toFixed(1) + '%';
-            document.getElementById('voltDiff').className = 'status-value ' +
-                (voltDiff < 5 ? 'ok' : voltDiff < 10 ? 'warning' : 'error');
+            document.getElementById('voltDiff').className = 'value ' + (voltDiff < 5 ? 'ok' : (voltDiff < 10 ? 'warning' : 'error'));
 
             // Sync status
             const inSync = slipFreqAbs < 0.067 && angleAbs < 10 && voltDiff < 5;
             const statusEl = document.getElementById('syncStatus');
-            statusEl.textContent = inSync ? 'IN SYNC — OK TO CLOSE' : 'NOT IN SYNC';
-            statusEl.className = 'sync-status ' + (inSync ? 'synced' : 'not-synced');
+            if (inSync) {
+                statusEl.textContent = 'IN SYNC - OK TO CLOSE BREAKER';
+                statusEl.className = 'sync-indicator synced';
+            } else {
+                statusEl.textContent = 'NOT IN SYNC - DO NOT CLOSE BREAKER';
+                statusEl.className = 'sync-indicator not-synced';
+            }
 
-            requestAnimationFrame(draw);
+            requestAnimationFrame(drawSynchroscope);
         }
 
         function drawWaveforms(currentTime) {
-            const w = waveCanvas.width / window.devicePixelRatio;
-            const h = 200;
+            waveCtx.fillStyle = '#0f172a';
+            waveCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
 
-            waveCtx.fillStyle = '#000';
-            waveCtx.fillRect(0, 0, w, h);
+            const midY = waveCanvas.height / 2;
 
             // Grid
-            waveCtx.strokeStyle = '#1d1d1f';
-            waveCtx.lineWidth = 1;
-            for (let i = 0; i < w; i += 50) {
+            waveCtx.strokeStyle = '#334155';
+            waveCtx.lineWidth = 0.5;
+            for (let i = 0; i < waveCanvas.width; i += 50) {
                 waveCtx.beginPath();
                 waveCtx.moveTo(i, 0);
-                waveCtx.lineTo(i, h);
+                waveCtx.lineTo(i, waveCanvas.height);
+                waveCtx.stroke();
+            }
+            for (let i = 0; i < waveCanvas.height; i += 30) {
+                waveCtx.beginPath();
+                waveCtx.moveTo(0, i);
+                waveCtx.lineTo(waveCanvas.width, i);
                 waveCtx.stroke();
             }
 
             // Zero line
-            waveCtx.strokeStyle = '#333';
+            waveCtx.strokeStyle = '#475569';
+            waveCtx.lineWidth = 1;
             waveCtx.beginPath();
-            waveCtx.moveTo(0, h / 2);
-            waveCtx.lineTo(w, h / 2);
+            waveCtx.moveTo(0, midY);
+            waveCtx.lineTo(waveCanvas.width, midY);
             waveCtx.stroke();
 
-            const samples = w;
-            const dt = 0.1 / samples;
-            const yScale = 70 / 130;
+            const timeScale = 0.1;
+            const samples = waveCanvas.width;
+            const dt = timeScale / samples;
+            const yScale = 100 / 200;
 
-            // Bus (red)
+            // Running (red)
             waveCtx.beginPath();
-            waveCtx.strokeStyle = '#ff453a';
+            waveCtx.strokeStyle = '#ef4444';
             waveCtx.lineWidth = 2;
             for (let i = 0; i < samples; i++) {
                 const t = currentTime + i * dt;
                 const v = mag1 * Math.sin(2 * Math.PI * freq1 * t);
-                const y = h / 2 - v * yScale;
+                const y = midY - v * yScale;
                 if (i === 0) waveCtx.moveTo(i, y);
                 else waveCtx.lineTo(i, y);
             }
             waveCtx.stroke();
 
-            // Generator (blue)
+            // Incoming (blue)
             waveCtx.beginPath();
-            waveCtx.strokeStyle = '#0a84ff';
+            waveCtx.strokeStyle = '#3b82f6';
             for (let i = 0; i < samples; i++) {
                 const t = currentTime + i * dt;
                 const v = mag2 * Math.sin(2 * Math.PI * freq2 * t);
-                const y = h / 2 - v * yScale;
+                const y = midY - v * yScale;
                 if (i === 0) waveCtx.moveTo(i, y);
                 else waveCtx.lineTo(i, y);
             }
             waveCtx.stroke();
         }
 
-        requestAnimationFrame(draw);
+        requestAnimationFrame(drawSynchroscope);
     </script>
 </body>
 </html>
