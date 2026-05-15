@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>421 Front Panel Emulator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #panel-container {
+            position: relative;
+            width: 100%;
+            max-width: 1400px;
+            aspect-ratio: 1400 / 700;
+        }
+        #panel-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        #help-tooltip {
+            position: fixed;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0d1f33 100%);
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+            max-width: 350px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 2px #4a90d9;
+            z-index: 10000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            font-family: Arial, sans-serif;
+        }
+        #help-tooltip.visible {
+            opacity: 1;
+        }
+        #help-tooltip .tooltip-title {
+            font-weight: bold;
+            color: #4a90d9;
+            font-size: 16px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #4a90d9;
+            padding-bottom: 5px;
+        }
+        #help-tooltip .tooltip-desc {
+            color: #e0e0e0;
+        }
+        .help-active {
+            cursor: help !important;
+        }
+        .help-active #lcd-canvas {
+            cursor: help !important;
+        }
+    </style>
+</head>
+<body>
+
+<div id="panel-container">
+    <svg id="panel-svg" viewBox="0 0 1400 700" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<div id="help-tooltip">
+    <div class="tooltip-title"></div>
+    <div class="tooltip-desc"></div>
+</div>
+
+
+<script>
+// ============================================================
+// CONFIGURATION - Colors matched to reference image
+// ============================================================
+const CONFIG = {
+    panelWidth: 1400,
+    panelHeight: 700,
+    panelColor: '#1e3a5f',      // Main blue
+    panelDark: '#162c48',       // Darker blue
+    rackColor: '#4a4a4a',       // Rack mount ears
+    lcdBackground: '#a4b820',   // Yellow-green LCD
+    lcdForeground: '#2a4a00',   // Dark green text
+    ledOff: '#2a3a4a',
+    ledGreen: '#00dd00',
+    ledRed: '#dd0000',
+    ledAmber: '#ddaa00',
+    white: '#ffffff',
+    lightGrey: '#e8e8e8',
+    targetOrange: '#d45500'
+};
+
+// ============================================================
+// LAYOUT - Positions matching reference (measured proportions)
+// ============================================================
+const LCD = { x: 180, y: 145, width: 265, height: 255 };
+
+const NAV = {
+    centerX: 565,
+    centerY: 225,
+    esc:   { x: 530, y: 382 },
+    ent:   { x: 605, y: 382 }
+};
+
+// Status area positions - aligned with target LEDs below
+const STATUS = {
+    enabled: { x: 700, y: 82 },
+    trip: { x: 700, y: 107 },
+    targetReset: { x: 840, y: 95 }
+};
+
+// Target LEDs - two columns
+const targetLEDs = [
+    // Left column
+    { id: 'led_inst',    label: 'INST',    x: 700, y: 150 },
+    { id: 'led_time',    label: 'TIME',    x: 700, y: 175 },
+    { id: 'led_comm',    label: 'COMM',    x: 700, y: 200 },
+    { id: 'led_sotf',    label: 'SOTF',    x: 700, y: 225 },
+    { id: 'led_zone1',   label: 'ZONE 1',  x: 700, y: 250 },
+    { id: 'led_zone2',   label: 'ZONE 2',  x: 700, y: 275 },
+    { id: 'led_zone3',   label: 'ZONE 3',  x: 700, y: 300 },
+    { id: 'led_zone4',   label: 'ZONE 4',  x: 700, y: 325 },
+    { id: 'led_phase_a', label: 'PHASE A', x: 700, y: 350 },
+    { id: 'led_phase_b', label: 'PHASE B', x: 700, y: 375 },
+    { id: 'led_phase_c', label: 'PHASE C', x: 700, y: 400 },
+    { id: 'led_ground',  label: 'GROUND',  x: 700, y: 425 },
+    // Right column
+    { id: 'led_50',          label: '50',          x: 810, y: 150 },
+    { id: 'led_51',          label: '51',          x: 810, y: 175 },
+    { id: 'led_79_reset',    label: '79 RESET',    x: 810, y: 200 },
+    { id: 'led_79_lockout',  label: '79 LOCKOUT',  x: 810, y: 225 },
+    { id: 'led_79_cycle',    label: '79 CYCLE',    x: 810, y: 250 },
+    { id: 'led_25_synch',    label: '25 SYNCH',    x: 810, y: 275 },
+    { id: 'led_bkr_close',   label: 'BKR CLOSE',   x: 810, y: 300 },
+    { id: 'led_bkr_fail',    label: 'BKR FAIL',    x: 810, y: 325 },
+    { id: 'led_osb',         label: 'OSB',         x: 810, y: 350 },
+    { id: 'led_lop',         label: 'LOP',         x: 810, y: 375 },
+    { id: 'led_pmcu_ok',     label: 'PMCU OK',     x: 810, y: 400 },
+    { id: 'led_irig_lock',   label: 'IRIG LOCK',   x: 810, y: 425 }
+];
+
+// Pushbutton section - matches reference layout
+const BUTTON_BOX = { x: 920, y: 65, width: 290, height: 380 };
+
+// Button labels (first 2 rows and bottom row have labels)
+const buttonLabels = [
+    ['RECLOSE\nOFF', 'RECLOSE\nON'],
+    ['COMM\nSCHEME\nOFF', 'COMM\nSCHEME\nON'],
+    ['', ''],
+    ['', ''],
+    ['', ''],
+    ['FAULT', 'HELP']
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+    leds: {},
+    displayMode: 'rotating',
+    rotatingIndex: 0,
+    rotatingTimer: null,
+    menuStack: [],
+    currentMenu: null,
+    selectedIndex: 0,
+    eventIndex: 0,
+    faultActive: false,
+    recloseOn: true,
+    commSchemeOn: true,
+    helpMode: false
+};
+
+// Help descriptions for each indicator (lineman/subtech friendly)
+const helpDescriptions = {
+    'led_enabled': 'ENABLED: Relay is in service and actively protecting the line. When lit, protection functions are armed and ready to operate.',
+    'led_trip': 'TRIP: Relay has sent a trip signal to open the breaker. This lights up when a fault is detected and the relay commands the breaker to open.',
+    'led_inst': 'INST (Instantaneous): A fault was cleared with NO intentional time delay. Used for severe faults close to the substation that need immediate clearing.',
+    'led_time': 'TIME (Time Delayed): A fault was cleared after a programmed time delay. Allows coordination with downstream devices.',
+    'led_comm': 'COMM (Communications): Trip was assisted by pilot/transfer trip communication from the remote end. Used in pilot protection schemes.',
+    'led_sotf': 'SOTF (Switch Onto Fault): Detected that the line was energized onto an existing fault. Provides fast tripping when closing into a faulted line.',
+    'led_zone1': 'ZONE 1: Distance element covering ~80-85% of the protected line. Trips instantaneously for faults in this zone.',
+    'led_zone2': 'ZONE 2: Distance element covering 100-120% of the line (into the next section). Trips with a time delay for coordination.',
+    'led_zone3': 'ZONE 3: Extended reach backup protection. Covers remote bus and adjacent lines. Longest time delay.',
+    'led_zone4': 'ZONE 4: Reverse-looking zone or additional backup. May look behind the relay for bus faults or backup protection.',
+    'led_phase_a': 'PHASE A: Indicates A-phase was involved in the fault. Helps identify which conductor(s) faulted.',
+    'led_phase_b': 'PHASE B: Indicates B-phase was involved in the fault. Helps identify which conductor(s) faulted.',
+    'led_phase_c': 'PHASE C: Indicates C-phase was involved in the fault. Helps identify which conductor(s) faulted.',
+    'led_ground': 'GROUND: A ground/earth fault was detected. Current was flowing to ground, indicating insulation failure or conductor down.',
+    'led_50': '50 (Instantaneous Overcurrent): Current exceeded the instantaneous pickup setting. Fast trip with no delay for high-current faults.',
+    'led_51': '51 (Time Overcurrent): Current exceeded pickup and the time-current curve timed out. Provides coordinated overcurrent protection.',
+    'led_79_reset': '79 RESET: Automatic recloser is reset and ready. The relay will attempt to reclose the breaker after a trip if enabled.',
+    'led_79_lockout': '79 LOCKOUT: Recloser is locked out - no more automatic reclose attempts. Requires manual reset or target reset.',
+    'led_79_cycle': '79 CYCLE: Recloser is currently in a reclose sequence. Breaker is open and waiting to attempt a reclose.',
+    'led_25_synch': '25 SYNCH (Synchronism Check): Verifies voltage, angle, and frequency match before allowing breaker close. Prevents out-of-sync closing.',
+    'led_bkr_close': 'BKR CLOSE: Breaker close command has been issued. Indicates the relay commanded the breaker to close.',
+    'led_bkr_fail': 'BKR FAIL (Breaker Failure): Breaker did not clear the fault in expected time. Initiates backup tripping of upstream breakers.',
+    'led_osb': 'OSB (Out of Step Block): Power swing detected. Blocks distance elements during stable power swings to prevent unwanted trips.',
+    'led_lop': 'LOP (Loss of Potential): PT/VT fuse failure detected. Voltage inputs may be unreliable - distance elements may be blocked.',
+    'led_pmcu_ok': 'PMCU OK: Main processor is healthy and running. If NOT lit, relay may have internal failure - contact maintenance.',
+    'led_irig_lock': 'IRIG LOCK: Time synchronization is locked to IRIG-B signal. Event timestamps and synchrophasors are accurately time-stamped.',
+    'btn_target_reset': 'TARGET RESET: Clears latched fault indicators (targets) after an event. Press to reset trip and fault LEDs after reviewing the event. Also performs a lamp test - all LEDs light briefly to verify they work.',
+    'btn_reclose_off': 'RECLOSE OFF: Disables automatic reclosing (79 function). Breaker will NOT automatically reclose after a trip. Use when working on the line or when reclosing is not desired. 79 LOCKOUT LED will light.',
+    'btn_reclose_on': 'RECLOSE ON: Enables automatic reclosing (79 function). After a trip, the relay will attempt to automatically reclose the breaker after the programmed dead time. 79 RESET LED will light.',
+    'btn_comm_off': 'COMM SCHEME OFF: Disables communications-assisted tripping (pilot protection). Schemes like DCB (Directional Comparison Blocking), POTT (Permissive Overreach Transfer Trip), or DTT (Direct Transfer Trip) will not operate.',
+    'btn_comm_on': 'COMM SCHEME ON: Enables communications-assisted tripping. Allows pilot schemes (DCB, POTT, DTT) to send/receive trip signals from the remote terminal for high-speed clearing of line faults.',
+    'btn_fault': 'FAULT: Simulates a fault event for training purposes. Press to trigger a simulated Zone 2 BCG (B-phase, C-phase, Ground) fault and see how the relay responds.'
+};
+
+// Help descriptions for event summary display lines
+const eventHelpDescriptions = {
+    0: 'EVENT SUMMARY: The header showing this is an event record. The number (e.g., 10042) is the sequential event number stored in relay memory. Higher numbers are more recent events.',
+    1: 'DATE: The date when this fault/event occurred. Format is MM/DD/YYYY. Important for correlating with SCADA records and operator logs.',
+    2: 'GROUP: The settings group that was active when the event occurred. Relays can have multiple settings groups (1-6) for different system configurations or seasons.',
+    3: 'TIME: Precise timestamp of the event with millisecond resolution. Synchronized via IRIG-B for accurate fault analysis and coordination studies.',
+    4: 'EVENT TYPE: Describes what protection element operated. "ZONE 2 BCG" means Zone 2 distance element saw a B-phase to C-phase to Ground fault.',
+    5: 'FREQUENCY: System frequency at the time of the fault (normally 60.00 Hz). Deviation from 60 Hz may indicate system stress or generation/load imbalance.',
+    6: 'FAULT LOCATION: Calculated distance to the fault in miles from this relay location. Uses impedance-based calculation. Helps crews find the fault faster.'
+};
+
+// Help descriptions for menu items (lineman/subtech friendly)
+const menuHelpDescriptions = {
+    // Main Menu Items
+    'MAIN MENU': 'MAIN MENU: The top-level navigation menu. Use arrow keys to scroll through options, ENT to select, ESC to go back to rotating meter display.',
+    'METER': 'METER: View real-time electrical measurements. Shows voltages, currents, power, frequency, and other live readings from the line. Use this to verify the line is energized and check load.',
+    'EVENTS': 'EVENTS: Access fault records and event history. Review what happened during trips, see fault currents/voltages, and analyze protection operations. Critical for post-fault investigation.',
+    'BREAKER MONITOR': 'BREAKER MONITOR: Check breaker health and operation statistics. Shows number of operations, accumulated fault current (I²t), contact wear, and helps predict maintenance needs.',
+    'RELAY ELEMENTS': 'RELAY ELEMENTS: View status of individual protection elements (50, 51, 21, 67, etc.). Shows which elements are picked up, timing status, and element states. Useful for troubleshooting.',
+    'LOCAL CONTROL': 'LOCAL CONTROL: Manually operate outputs and control breakers from the front panel. Requires appropriate access level. Use carefully - can trip or close breakers!',
+    'SET/SHOW': 'SET/SHOW: View and modify relay settings. Shows pickup values, time delays, CT/PT ratios, and protection settings. Changing settings requires Level 2 or 3 access password.',
+    'RELAY STATUS': 'RELAY STATUS: View relay identification, firmware version, and diagnostic information. Shows DNA (relay ID), self-test results, and operational history.',
+    'VIEW CONFIGURATION': 'VIEW CONFIGURATION: Display the relay\'s hardware configuration, part number, serial number, and installed options. Useful for ordering replacement parts or verifying model.',
+    'DISPLAY TEST': 'DISPLAY TEST: Tests the LCD display by filling all pixels. Verify all segments work. Also useful as a simple "relay is working" check during inspections.',
+    'RESET ACCESS LEVEL': 'RESET ACCESS LEVEL: Change your access level (1=View, 2=Command, 3=Settings). Higher levels require passwords. Level 1 is read-only, Level 2 allows control, Level 3 allows setting changes.',
+    'ONELINE DIAGRAM': 'ONELINE DIAGRAM: Shows a simple one-line diagram with breaker status (open/closed). Quick visual check of breaker positions without looking at the physical breakers.',
+
+    // Meter Submenu
+    'METER MENU': 'METER MENU: Select which type of electrical measurements to view. Different meter views show the same data in different formats.',
+    'RMS METER': 'RMS METER: Shows Root-Mean-Square values of voltages and currents. RMS is the "effective" value - what your multimeter would read. Standard view for checking load and voltage.',
+    'FUNDAMENTAL METER': 'FUNDAMENTAL METER: Shows 60Hz fundamental component with phase angles. Filters out harmonics. Angles are relative to VA (A-phase voltage = 0°). Used for phasing checks and phasor analysis.',
+    'DEMAND METER': 'DEMAND METER: Shows peak and average (demand) current over a time window. Used for load studies and checking if conductors/equipment are being overloaded. Important for planning.',
+    'ENERGY METER': 'ENERGY METER: Shows accumulated energy in MWh (megawatt-hours) and MVARh. Forward = power flowing toward the line, Reverse = power flowing back. Used for energy accounting.',
+    'MAX/MIN': 'MAX/MIN: Shows the highest and lowest recorded values with timestamps. Useful for finding when peak loads occurred or if voltages dropped during an event.',
+    'SYNCHRONISM CHECK': 'SYNCHRONISM CHECK: Compares voltage magnitude, angle, and frequency across the breaker before allowing close. Prevents closing out of sync which could damage equipment.',
+
+    // Events Submenu
+    'EVENTS MENU': 'EVENTS: Access stored fault and event records for analysis and troubleshooting.',
+    'EVENT SUMMARY': 'EVENT SUMMARY: Quick overview of recent events showing date, time, fault type, and location. Start here when investigating a trip - gives you the key facts fast.',
+    'SEQUENCE OF EVENTS': 'SEQUENCE OF EVENTS: Millisecond-by-millisecond log of what happened. Shows exact order of element pickups, trips, and input changes. Critical for analyzing protection coordination.',
+    'EVENT REPORTS': 'EVENT REPORTS: Detailed fault reports with waveforms and phasors. Contains all the data needed for fault analysis. Usually retrieved via laptop/software for detailed review.',
+    'CLEAR EVENTS': 'CLEAR EVENTS: Deletes all stored events from memory. USE WITH CAUTION - you cannot recover deleted events! Only clear after downloading/documenting important events.',
+
+    // Breaker Monitor Submenu
+    'BREAKER MONITOR MENU': 'BREAKER MONITOR: View statistics and health information for connected breakers.',
+    'BREAKER 1': 'BREAKER 1: Shows BK1 operation count, accumulated fault current (contact wear indicator), and last operation date. High fault duty or operation count may indicate maintenance needed.',
+    'BREAKER 2': 'BREAKER 2: Shows BK2 operation count, accumulated fault current (contact wear indicator), and last operation date. High fault duty or operation count may indicate maintenance needed.',
+
+    // Relay Elements Submenu
+    'RELAY ELEMENTS MENU': 'RELAY ELEMENTS: View status of protection elements organized by relay word bits.',
+    'SEARCH': 'SEARCH: Find specific relay word bits or elements by name. Type letters to search (like "TRIP" or "50P1"). Faster than scrolling through all rows.',
+    'ROW 1': 'ROW 1: Protection element status bits - typically input contacts, protection pickups, and primary elements. Shows real-time 1/0 status.',
+    'ROW 2': 'ROW 2: Additional protection elements and logic bits. May include overcurrent, distance, and directional element status.',
+    'ROW 3': 'ROW 3: More relay word bits - often includes timing elements, lockout status, and scheme logic bits.',
+    'ROW 4': 'ROW 4: Additional status bits - may include reclosing logic, breaker failure, and supervisory elements.',
+    'ROW 5': 'ROW 5: More relay word bits - varies by relay configuration. Check relay manual for specific bit assignments.',
+
+    // Local Control Submenu
+    'LOCAL CONTROL MENU': 'LOCAL CONTROL: Manually operate relay outputs and breakers. Requires appropriate access level.',
+    'BREAKER CONTROL': 'BREAKER CONTROL: Open or close breakers from the front panel. CAUTION: This operates real equipment! Verify switching orders and clearances before operating.',
+    'OUTPUT TESTING': 'OUTPUT TESTING: Pulse individual output contacts for testing. Used to verify output wiring and connected devices. Use during commissioning or troubleshooting.',
+    'LOCAL BITS': 'LOCAL BITS: Set or clear local control bits (LB01-LB16). These are software flags that can be used in relay logic. Often used for testing or temporary logic overrides.',
+
+    // Set/Show Submenu
+    'SET/SHOW MENU': 'SET/SHOW: View and modify relay settings. Requires password for changes.',
+    'GROUP 1': 'GROUP 1: Primary settings group - protection settings like zone reaches, overcurrent pickups, and time delays. Most relays operate in Group 1 under normal conditions.',
+    'GROUP 2': 'GROUP 2: Alternate settings group - may have different reaches or pickups for different system configurations (e.g., line out of service, seasonal changes).',
+    'GLOBAL': 'GLOBAL: Settings that apply to all groups - CT ratios, PT ratios, nominal values, communications settings. Changes here affect all protection groups.',
+    'PORT': 'PORT: Serial port and communications settings. Baud rate, protocol, DNP3/Modbus addresses. Usually set during commissioning and rarely changed.',
+    'FRONT PANEL': 'FRONT PANEL: Front panel display settings - LCD contrast, button beep, auto-scroll timing. Cosmetic settings that don\'t affect protection.',
+    'REPORT': 'REPORT: Event report format settings - what data to include, trigger conditions. Affects how much detail is captured during faults.',
+
+    // Relay Status Submenu
+    'RELAY STATUS MENU': 'RELAY STATUS: View relay identification, diagnostics, and operational history.',
+    'DNA': 'DNA: Relay identification - firmware ID (FID), part number, serial number, and configuration code. Record this info for documentation and when calling tech support.',
+    'HISTORY': 'HISTORY: Summary of relay operations - total events, trips, reclose attempts, and last trip details. Quick health check of how active the relay has been.',
+    'FAULT SUMMARY': 'FAULT SUMMARY: Details of the most recent fault - date, type, fault currents, and calculated location. Quick reference without pulling up full event reports.',
+    'SELF-TEST STATUS': 'SELF-TEST STATUS: Results of continuous self-diagnostics. RAM, ROM, ADC, and watchdog tests. All should show PASS. Failures indicate hardware problems - contact maintenance.'
+};
+
+// Initialize LED states
+targetLEDs.forEach(led => state.leds[led.id] = false);
+state.leds['led_enabled'] = true;
+state.leds['led_79_reset'] = true;
+state.leds['led_pmcu_ok'] = true;
+state.leds['led_irig_lock'] = true;
+
+// ============================================================
+// FAULT EVENT DATA
+// ============================================================
+const faultEvent = {
+    number: 10042,
+    date: '05/14/2026',
+    time: '14:23:05.387',
+    group: 1,
+    type: 'ZONE 2 BCG',
+    frequency: 59.97,
+    faultLocation: 12.3,
+    targets: ['TIME', 'ZONE 2', 'PHASE B', 'PHASE C', 'GROUND', '50'],
+    fault: {
+        va: { mag: 128.5, ang: 2.1 },
+        vb: { mag: 45.2, ang: -98.4 },
+        vc: { mag: 52.3, ang: 156.7 },
+        ia: { mag: 312.0, ang: -18.3 },
+        ib: { mag: 3845.0, ang: 168.5 },
+        ic: { mag: 3720.0, ang: 12.8 },
+        ig: { mag: 425.0, ang: -85.2 }
+    }
+};
+
+const eventScreens = [
+    () => [
+        `EVENT SUMMARY ${faultEvent.number}`,
+        faultEvent.date,
+        `GROUP ${faultEvent.group}`,
+        faultEvent.time,
+        `EVENT: ${faultEvent.type}`,
+        `FREQUENCY: ${faultEvent.frequency.toFixed(2)}`,
+        `FAULT LOC: ${faultEvent.faultLocation.toFixed(1)} MI`
+    ],
+    () => [
+        `EVENT SUMMARY ${faultEvent.number}`,
+        'TARGETS:',
+        ...faultEvent.targets
+    ],
+    () => {
+        const f = faultEvent.fault;
+        return [
+            `EVENT SUMMARY ${faultEvent.number}`,
+            'FAULT VOLTAGES (KV)',
+            `VA = ${f.va.mag.toFixed(1).padStart(6)} ${formatAngle(f.va.ang)}`,
+            `VB = ${f.vb.mag.toFixed(1).padStart(6)} ${formatAngle(f.vb.ang)}`,
+            `VC = ${f.vc.mag.toFixed(1).padStart(6)} ${formatAngle(f.vc.ang)}`
+        ];
+    },
+    () => {
+        const f = faultEvent.fault;
+        return [
+            `EVENT SUMMARY ${faultEvent.number}`,
+            'FAULT CURRENTS (A)',
+            `IA = ${f.ia.mag.toFixed(0).padStart(6)} ${formatAngle(f.ia.ang)}`,
+            `IB = ${f.ib.mag.toFixed(0).padStart(6)} ${formatAngle(f.ib.ang)}`,
+            `IC = ${f.ic.mag.toFixed(0).padStart(6)} ${formatAngle(f.ic.ang)}`,
+            `IG = ${f.ig.mag.toFixed(0).padStart(6)} ${formatAngle(f.ig.ang)}`
+        ];
+    },
+    () => [
+        `EVENT SUMMARY ${faultEvent.number}`,
+        'FAULT LOCATION',
+        '',
+        `DISTANCE: ${faultEvent.faultLocation.toFixed(2)} MILES`,
+        `TYPE: ${faultEvent.type}`,
+        '',
+        'PRESS ESC TO RETURN'
+    ]
+];
+
+function formatAngle(ang) {
+    const sign = ang >= 0 ? '+' : '';
+    return `${sign}${ang.toFixed(1)}`;
+}
+
+// ============================================================
+// ROTATING DISPLAY SCREENS (matching manual Section 4)
+// ============================================================
+const rotatingScreens = [
+    {
+        header: 'RMS LINE METER',
+        lines: [
+            'VOLTAGE (KV)',
+            'VA =   130.4',
+            'VB =   130.3',
+            'VC =   130.5',
+            'CURRENT (A)',
+            'IA =   365.7',
+            'IB =   330.2',
+            'IC =   348.3',
+            'FREQ = 60.00 HZ'
+        ]
+    },
+    {
+        header: 'FUND LINE METER',
+        lines: [
+            'VOLTAGE (KV)',
+            'VA = 130.4   +6',
+            'VB = 130.3 -114',
+            'VC = 130.5 +126',
+            'CURRENT (A)',
+            'IA = 365.7  +35',
+            'IB = 330.2  -85',
+            'IC = 348.3 +155',
+            'FREQ = 60.00 HZ'
+        ]
+    },
+    {
+        header: 'RMS LINE METER',
+        lines: [
+            'VOLTAGE (KV)',
+            'VAB =  225.9',
+            'VBC =  225.8',
+            'VCA =  226.0',
+            'CURRENT (A)',
+            '3I2 =    1.2',
+            '3I0 =    0.8',
+            '',
+            'FREQ = 60.00 HZ'
+        ]
+    },
+    {
+        header: 'ENERGY METER',
+        lines: [
+            '',
+            'MWH FWD =  1234.5',
+            'MWH REV =    12.3',
+            'MVARH  =   456.7',
+            '',
+            'DEMAND (A)',
+            'IA PEAK =   412.3',
+            '',
+            ''
+        ]
+    }
+];
+
+// Menus matching SEL-421 manual Section 4
+const mainMenu = {
+    title: 'MAIN MENU',
+    items: ['METER', 'EVENTS', 'BREAKER MONITOR', 'RELAY ELEMENTS',
+            'LOCAL CONTROL', 'SET/SHOW', 'RELAY STATUS', 'VIEW CONFIGURATION',
+            'DISPLAY TEST', 'RESET ACCESS LEVEL', 'ONELINE DIAGRAM']
+};
+
+const meterMenu = {
+    title: 'METER MENU',
+    items: ['RMS METER', 'FUNDAMENTAL METER', 'DEMAND METER',
+            'ENERGY METER', 'MAX/MIN', 'SYNCHRONISM CHECK']
+};
+
+const eventsMenu = {
+    title: 'EVENTS',
+    items: ['EVENT SUMMARY', 'SEQUENCE OF EVENTS', 'EVENT REPORTS', 'CLEAR EVENTS']
+};
+
+const breakerMonitorMenu = {
+    title: 'BREAKER MONITOR',
+    items: ['BREAKER 1', 'BREAKER 2']
+};
+
+const relayElementsMenu = {
+    title: 'RELAY ELEMENTS',
+    items: ['SEARCH', 'ROW 1', 'ROW 2', 'ROW 3', 'ROW 4', 'ROW 5']
+};
+
+const localControlMenu = {
+    title: 'LOCAL CONTROL',
+    items: ['BREAKER CONTROL', 'OUTPUT TESTING', 'LOCAL BITS']
+};
+
+const setShowMenu = {
+    title: 'SET/SHOW',
+    items: ['GROUP 1', 'GROUP 2', 'GLOBAL', 'PORT', 'FRONT PANEL', 'REPORT']
+};
+
+const relayStatusMenu = {
+    title: 'RELAY STATUS',
+    items: ['DNA', 'HISTORY', 'FAULT SUMMARY', 'SELF-TEST STATUS']
+};
+
+// Static display screens for submenus
+const staticScreens = {
+    'RMS METER': {
+        title: 'RMS LINE METER',
+        lines: ['VOLTAGE (KV)', 'VA =   130.4', 'VB =   130.3', 'VC =   130.5',
+                'CURRENT (A)', 'IA =   365.7', 'IB =   330.2', 'IC =   348.3', 'FREQ = 60.00 HZ']
+    },
+    'FUNDAMENTAL METER': {
+        title: 'FUND LINE METER',
+        lines: ['VOLTAGE (KV)', 'VA = 130.4   +6', 'VB = 130.3 -114', 'VC = 130.5 +126',
+                'CURRENT (A)', 'IA = 365.7  +35', 'IB = 330.2  -85', 'IC = 348.3 +155']
+    },
+    'DEMAND METER': {
+        title: 'DEMAND METER',
+        lines: ['CURRENTS (A)', 'IA PEAK =   412.3', '   DEM  =   365.7',
+                'IB PEAK =   385.2', '   DEM  =   330.2', 'IC PEAK =   401.5', '   DEM  =   348.3']
+    },
+    'ENERGY METER': {
+        title: 'ENERGY METER',
+        lines: ['', 'MWH FWD =  1234.5', 'MWH REV =    12.3', 'MVARH   =   456.7', '', '', '', '']
+    },
+    'MAX/MIN': {
+        title: 'MAX/MIN VALUES',
+        lines: ['VOLTAGE MAX (KV)', 'VA = 132.1  05/14', 'VB = 131.8  05/14', 'VC = 132.0  05/14',
+                'CURRENT MAX (A)', 'IA = 412.3  05/14', 'IB = 385.2  05/14', 'IC = 401.5  05/14']
+    },
+    'SYNCHRONISM CHECK': {
+        title: 'SYNCH CHECK',
+        lines: ['BK1 STATUS: READY', '', 'VLOCAL  = 130.4 KV', 'VREMOTE = 130.2 KV',
+                'ANGLE   =   2.3', 'FREQ DIF=  0.01 HZ', 'SLIP    =  0.02 HZ', '']
+    },
+    'BREAKER 1': {
+        title: 'BK1 ALARM COUNTER',
+        lines: ['OPERATIONS:  1234', 'A AMPS SUM: 12345', 'B AMPS SUM: 12340', 'C AMPS SUM: 12342',
+                'FAULT I^2T:  2.5', 'CONTACT WEAR: 45%', 'LAST OP: 05/14/26', '']
+    },
+    'BREAKER 2': {
+        title: 'BK2 ALARM COUNTER',
+        lines: ['OPERATIONS:   567', 'A AMPS SUM:  5678', 'B AMPS SUM:  5670', 'C AMPS SUM:  5675',
+                'FAULT I^2T:  1.2', 'CONTACT WEAR: 22%', 'LAST OP: 05/10/26', '']
+    },
+    'SEQUENCE OF EVENTS': {
+        title: 'SEQ OF EVENTS',
+        lines: ['EVENT 10042', '14:23:05.387 TRIP', '14:23:05.385 Z2G', '14:23:05.380 50G1',
+                '14:23:05.012 IN101', '', 'PRESS ESC TO EXIT', '']
+    },
+    'EVENT REPORTS': {
+        title: 'EVENT REPORTS',
+        lines: ['STORED EVENTS: 42', '', 'NEWEST: 10042', 'OLDEST: 10001', '',
+                'USE SERIAL PORT', 'TO RETRIEVE', '']
+    },
+    'CLEAR EVENTS': {
+        title: 'CLEAR EVENTS?',
+        lines: ['', 'THIS WILL DELETE', 'ALL STORED EVENTS', '', '> NO', '  YES', '', 'SELECT AND PRESS ENT']
+    },
+    'BREAKER CONTROL': {
+        title: 'BREAKER CONTROL',
+        lines: ['BREAKER 1: CLOSED', 'BREAKER 2: CLOSED', '', '> OPEN BK1', '  CLOSE BK1',
+                '  OPEN BK2', '  CLOSE BK2', '']
+    },
+    'OUTPUT TESTING': {
+        title: 'OUTPUT TESTING',
+        lines: ['SELECT OUTPUT:', '> OUT101', '  OUT102', '  OUT103', '  OUT104',
+                '  OUT105', '', 'ENT TO PULSE']
+    },
+    'LOCAL BITS': {
+        title: 'LOCAL BITS',
+        lines: ['LB01 = 0', 'LB02 = 0', 'LB03 = 0', 'LB04 = 0', 'LB05 = 0', 'LB06 = 0', '', '']
+    },
+    'GROUP 1': {
+        title: 'GROUP 1 SETTINGS',
+        lines: ['Z1MP  =  4.50 OHM', 'Z1MG  =  4.50 OHM', 'Z2MP  = 12.50 OHM', 'Z2MG  = 12.50 OHM',
+                '50P1P =   6.0 A', '51P1P =   5.0 A', '', 'PRESS DOWN FOR MORE']
+    },
+    'GROUP 2': {
+        title: 'GROUP 2 SETTINGS',
+        lines: ['Z1MP  =  4.50 OHM', 'Z1MG  =  4.50 OHM', 'Z2MP  = 12.50 OHM', 'Z2MG  = 12.50 OHM',
+                '50P1P =   6.0 A', '51P1P =   5.0 A', '', 'PRESS DOWN FOR MORE']
+    },
+    'GLOBAL': {
+        title: 'GLOBAL SETTINGS',
+        lines: ['CTR   =  1200', 'CTRN  =  1200', 'PTR   =  2000', 'PTRN  =  2000',
+                'INOM  =   5.0 A', 'VNOM  =  67.0 V', '', 'PRESS DOWN FOR MORE']
+    },
+    'DNA': {
+        title: 'RELAY DNA',
+        lines: ['FID=421-5', 'PARTNUM: 0421500', 'BFID=SLBT-4XXR205', 'CONFIG: 5XC0X4H60',
+                '', 'SN: 2024010001', '', '']
+    },
+    'HISTORY': {
+        title: 'HISTORY REPORT',
+        lines: ['TOTAL EVENTS: 42', 'TOTAL TRIPS:  15', 'TOTAL RECLOSE: 8', '',
+                'LAST TRIP:', '05/14/26 14:23:05', 'ZONE 2 BCG', '']
+    },
+    'FAULT SUMMARY': {
+        title: 'FAULT SUMMARY',
+        lines: ['LAST FAULT:', '05/14/26 14:23:05', 'TYPE: BCG', 'LOCATION: 12.3 MI',
+                'IA= 312 A', 'IB=3845 A', 'IC=3720 A', '']
+    },
+    'SELF-TEST STATUS': {
+        title: 'SELF-TEST STATUS',
+        lines: ['RAM TEST: PASS', 'ROM TEST: PASS', 'EEPROM: PASS', 'ADC TEST: PASS',
+                'WATCHDOG: OK', 'TEMP: 45 C', '', 'ALL TESTS PASSED']
+    },
+    'VIEW CONFIGURATION': {
+        title: 'CONFIGURATION INFO',
+        lines: ['FID=421-5', 'PARTNUM: 0421500', 'S/N: 2024010001', '',
+                'MAINBOARD:', 'CODE FLASH: 4 MB', 'RAM: 3 MB', '']
+    },
+    'DISPLAY TEST': {
+        title: 'DISPLAY TEST',
+        lines: ['################', '################', '################', '################',
+                '################', '################', '################', 'PRESS ESC TO EXIT']
+    },
+    'RESET ACCESS LEVEL': {
+        title: 'ACCESS LEVEL',
+        lines: ['CURRENT LEVEL: 1', '', 'ENTER PASSWORD', 'TO CHANGE LEVEL', '',
+                '> LEVEL 1 (VIEW)', '  LEVEL 2 (COMMAND)', '  LEVEL 3 (SETTING)']
+    },
+    'ONELINE DIAGRAM': {
+        title: 'ONELINE DIAGRAM',
+        lines: ['    BK1    BK2', '   [=]----[=]', '    |      |', '----+------+----',
+                '         LINE', '', '52A: CL  52B: CL', '']
+    },
+    'SEARCH': {
+        title: 'ELEMENT SEARCH',
+        lines: ['A B C D E F', 'G H I J K L', 'M N O P Q R', 'S T U V W X',
+                'Y Z 0 1 2 3', '4 5 6 7 8 9', 'ACCEPT BACKSPACE', '']
+    }
+};
+
+// ============================================================
+// SVG GENERATION
+// ============================================================
+function generateSVG() {
+    const svg = document.getElementById('panel-svg');
+    let s = `
+        <defs>
+            <linearGradient id="panelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#2a4a70"/>
+                <stop offset="50%" stop-color="${CONFIG.panelColor}"/>
+                <stop offset="100%" stop-color="${CONFIG.panelDark}"/>
+            </linearGradient>
+            <linearGradient id="rackGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#a8a8a8"/>
+                <stop offset="15%" stop-color="#d0d0d0"/>
+                <stop offset="50%" stop-color="#e8e8e8"/>
+                <stop offset="85%" stop-color="#d0d0d0"/>
+                <stop offset="100%" stop-color="#a0a0a0"/>
+            </linearGradient>
+            <linearGradient id="rackGradRight" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#a0a0a0"/>
+                <stop offset="15%" stop-color="#d0d0d0"/>
+                <stop offset="50%" stop-color="#e8e8e8"/>
+                <stop offset="85%" stop-color="#d0d0d0"/>
+                <stop offset="100%" stop-color="#a8a8a8"/>
+            </linearGradient>
+            <radialGradient id="screwHoleGrad" cx="40%" cy="40%">
+                <stop offset="0%" stop-color="#1a1a1a"/>
+                <stop offset="80%" stop-color="#333333"/>
+                <stop offset="100%" stop-color="#505050"/>
+            </radialGradient>
+            <linearGradient id="btnGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#2a4a70"/>
+                <stop offset="50%" stop-color="#1e3a5f"/>
+                <stop offset="100%" stop-color="#152a48"/>
+            </linearGradient>
+            <linearGradient id="silverGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#a0a0a0"/>
+                <stop offset="50%" stop-color="#c0c0c0"/>
+                <stop offset="100%" stop-color="#909090"/>
+            </linearGradient>
+            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+            </filter>
+        </defs>
+    `;
+
+    // Main panel background
+    s += `<rect x="0" y="0" width="${CONFIG.panelWidth}" height="${CONFIG.panelHeight}" fill="url(#panelGrad)"/>`;
+
+    // Rack mount ears (left and right) - polished silver with 2 holes each
+    const earWidth = 45;
+
+    // Left ear - polished silver
+    s += `<rect x="0" y="0" width="${earWidth}" height="${CONFIG.panelHeight}" fill="url(#rackGrad)"/>`;
+    s += `<line x1="0" y1="0" x2="0" y2="${CONFIG.panelHeight}" stroke="#f0f0f0" stroke-width="1"/>`; // Left edge highlight
+    s += `<line x1="${earWidth}" y1="0" x2="${earWidth}" y2="${CONFIG.panelHeight}" stroke="#808080" stroke-width="1"/>`; // Right edge shadow
+
+    // Right ear - polished silver
+    s += `<rect x="${CONFIG.panelWidth - earWidth}" y="0" width="${earWidth}" height="${CONFIG.panelHeight}" fill="url(#rackGradRight)"/>`;
+    s += `<line x1="${CONFIG.panelWidth - earWidth}" y1="0" x2="${CONFIG.panelWidth - earWidth}" y2="${CONFIG.panelHeight}" stroke="#808080" stroke-width="1"/>`; // Left edge shadow
+    s += `<line x1="${CONFIG.panelWidth}" y1="0" x2="${CONFIG.panelWidth}" y2="${CONFIG.panelHeight}" stroke="#f0f0f0" stroke-width="1"/>`; // Right edge highlight
+
+    // Mounting holes - 2 per side (top and bottom)
+    const holeRadius = 8;
+    const holePositions = [80, 420]; // Y positions - near top and bottom
+    const leftHoleX = earWidth / 2;
+    const rightHoleX = CONFIG.panelWidth - earWidth / 2;
+
+    // Left ear holes
+    holePositions.forEach(y => {
+        // Outer ring (beveled edge)
+        s += `<circle cx="${leftHoleX}" cy="${y}" r="${holeRadius + 2}" fill="#909090"/>`;
+        // Hole
+        s += `<circle cx="${leftHoleX}" cy="${y}" r="${holeRadius}" fill="url(#screwHoleGrad)"/>`;
+    });
+
+    // Right ear holes
+    holePositions.forEach(y => {
+        // Outer ring (beveled edge)
+        s += `<circle cx="${rightHoleX}" cy="${y}" r="${holeRadius + 2}" fill="#909090"/>`;
+        // Hole
+        s += `<circle cx="${rightHoleX}" cy="${y}" r="${holeRadius}" fill="url(#screwHoleGrad)"/>`;
+    });
+
+
+    // Logo box with 421 - aligned with LCD left edge
+    s += `
+        <rect x="${LCD.x}" y="78" width="48" height="42" fill="none" stroke="${CONFIG.white}" stroke-width="2" rx="2"/>
+        <text x="${LCD.x + 24}" y="105" fill="${CONFIG.white}" font-size="20" font-weight="bold" text-anchor="middle">421</text>
+    `;
+
+    // Title line and text - line with 421 on it, subtitle right below, both right-aligned
+    s += `<line x1="290" y1="100" x2="660" y2="100" stroke="${CONFIG.white}" stroke-width="1.5"/>`;
+    s += `<text x="658" y="96" fill="${CONFIG.white}" font-size="20" font-weight="bold" text-anchor="end">421</text>`;
+    s += `<text x="658" y="114" fill="${CONFIG.white}" font-size="11" text-anchor="end" letter-spacing="0.5">PROTECTION AUTOMATION CONTROL</text>`;
+
+    // LCD Display with frame
+    s += `<rect x="${LCD.x - 8}" y="${LCD.y - 8}" width="${LCD.width + 16}" height="${LCD.height + 16}" fill="#0a0a0a" stroke="#000" stroke-width="3" rx="4"/>`;
+    s += `<foreignObject x="${LCD.x}" y="${LCD.y}" width="${LCD.width}" height="${LCD.height}">
+            <canvas xmlns="http://www.w3.org/1999/xhtml" id="lcd-canvas" width="265" height="255"
+                    style="width:100%;height:100%;image-rendering:pixelated;background:${CONFIG.lcdBackground}"></canvas>
+          </foreignObject>`;
+
+    // Navigation arrows (outlined style like reference - tighter cluster)
+    const arrowSize = 14;
+    const arrowSpread = 40; // Distance from center to arrow
+
+    const navCenterX = NAV.centerX;
+    const navCenterY = NAV.centerY;
+
+    // UP arrow - white fill, blue outline, white outer outline
+    const upX = navCenterX, upY = navCenterY - arrowSpread;
+    s += `<g id="btn_up" cursor="pointer">
+            <polygon points="${upX},${upY - arrowSize} ${upX - arrowSize},${upY + arrowSize * 0.5} ${upX + arrowSize},${upY + arrowSize * 0.5}"
+                     fill="${CONFIG.white}" stroke="${CONFIG.white}" stroke-width="6"/>
+            <polygon points="${upX},${upY - arrowSize} ${upX - arrowSize},${upY + arrowSize * 0.5} ${upX + arrowSize},${upY + arrowSize * 0.5}"
+                     fill="${CONFIG.white}" stroke="${CONFIG.panelColor}" stroke-width="3"/>
+          </g>`;
+
+    // DOWN arrow
+    const downX = navCenterX, downY = navCenterY + arrowSpread;
+    s += `<g id="btn_down" cursor="pointer">
+            <polygon points="${downX},${downY + arrowSize} ${downX - arrowSize},${downY - arrowSize * 0.5} ${downX + arrowSize},${downY - arrowSize * 0.5}"
+                     fill="${CONFIG.white}" stroke="${CONFIG.white}" stroke-width="6"/>
+            <polygon points="${downX},${downY + arrowSize} ${downX - arrowSize},${downY - arrowSize * 0.5} ${downX + arrowSize},${downY - arrowSize * 0.5}"
+                     fill="${CONFIG.white}" stroke="${CONFIG.panelColor}" stroke-width="3"/>
+          </g>`;
+
+    // LEFT arrow
+    const leftX = navCenterX - arrowSpread, leftY = navCenterY;
+    s += `<g id="btn_left" cursor="pointer">
+            <polygon points="${leftX - arrowSize},${leftY} ${leftX + arrowSize * 0.5},${leftY - arrowSize} ${leftX + arrowSize * 0.5},${leftY + arrowSize}"
+                     fill="${CONFIG.white}" stroke="${CONFIG.white}" stroke-width="6"/>
+            <polygon points="${leftX - arrowSize},${leftY} ${leftX + arrowSize * 0.5},${leftY - arrowSize} ${leftX + arrowSize * 0.5},${leftY + arrowSize}"
+                     fill="${CONFIG.white}" stroke="${CONFIG.panelColor}" stroke-width="3"/>
+          </g>`;
+
+    // RIGHT arrow
+    const rightX = navCenterX + arrowSpread, rightY = navCenterY;
+    s += `<g id="btn_right" cursor="pointer">
+            <polygon points="${rightX + arrowSize},${rightY} ${rightX - arrowSize * 0.5},${rightY - arrowSize} ${rightX - arrowSize * 0.5},${rightY + arrowSize}"
+                     fill="${CONFIG.white}" stroke="${CONFIG.white}" stroke-width="6"/>
+            <polygon points="${rightX + arrowSize},${rightY} ${rightX - arrowSize * 0.5},${rightY - arrowSize} ${rightX - arrowSize * 0.5},${rightY + arrowSize}"
+                     fill="${CONFIG.white}" stroke="${CONFIG.panelColor}" stroke-width="3"/>
+          </g>`;
+
+    // ESC button - rounded square like reference
+    const escSize = 38;
+    s += `<g id="btn_esc" cursor="pointer">
+            <rect x="${NAV.esc.x - escSize/2}" y="${NAV.esc.y - escSize/2}" width="${escSize}" height="${escSize}"
+                  fill="${CONFIG.panelColor}" stroke="${CONFIG.white}" stroke-width="2" rx="10"/>
+            <text x="${NAV.esc.x}" y="${NAV.esc.y + 5}" fill="${CONFIG.white}" font-size="13" font-weight="bold" text-anchor="middle">ESC</text>
+          </g>`;
+
+    // ENT button - rounded square with enter arrow symbol like reference
+    const ex = NAV.ent.x, ey = NAV.ent.y;
+    const entSize = 38;
+    s += `<g id="btn_ent" cursor="pointer">
+            <rect x="${ex - entSize/2}" y="${ey - entSize/2}" width="${entSize}" height="${entSize}"
+                  fill="${CONFIG.panelColor}" stroke="${CONFIG.white}" stroke-width="2" rx="10"/>
+            <polyline points="${ex+5},${ey-12} ${ex+5},${ey-6} ${ex-5},${ey-6}"
+                  fill="none" stroke="${CONFIG.white}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polygon points="${ex-7},${ey-6} ${ex-2},${ey-9} ${ex-2},${ey-3}" fill="${CONFIG.white}"/>
+            <text x="${ex}" y="${ey + 10}" fill="${CONFIG.white}" font-size="13" font-weight="bold" text-anchor="middle">ENT</text>
+          </g>`;
+
+    // ========== STATUS SECTION ==========
+    // ENABLED LED and label
+    s += `<circle id="led_enabled" cx="${STATUS.enabled.x}" cy="${STATUS.enabled.y}" r="5" fill="${CONFIG.ledOff}"/>`;
+    s += `<text x="${STATUS.enabled.x + 12}" y="${STATUS.enabled.y + 4}" fill="${CONFIG.white}" font-size="12" font-weight="bold">ENABLED</text>`;
+
+    // TRIP LED and label
+    s += `<circle id="led_trip" cx="${STATUS.trip.x}" cy="${STATUS.trip.y}" r="5" fill="${CONFIG.ledOff}"/>`;
+    s += `<text x="${STATUS.trip.x + 12}" y="${STATUS.trip.y + 4}" fill="${CONFIG.white}" font-size="12" font-weight="bold">TRIP</text>`;
+
+    // TARGET RESET button - circle with blue fill, white outline, white text
+    const trRadius = 28;
+    s += `<g id="btn_target_reset" cursor="pointer">
+            <circle cx="${STATUS.targetReset.x}" cy="${STATUS.targetReset.y}" r="${trRadius}"
+                  fill="${CONFIG.panelColor}" stroke="${CONFIG.white}" stroke-width="2"/>
+            <text x="${STATUS.targetReset.x}" y="${STATUS.targetReset.y - 3}" fill="${CONFIG.white}" font-size="9" font-weight="bold" text-anchor="middle">TARGET</text>
+            <text x="${STATUS.targetReset.x}" y="${STATUS.targetReset.y + 9}" fill="${CONFIG.white}" font-size="9" font-weight="bold" text-anchor="middle">RESET</text>
+          </g>`;
+
+    // ========== TARGET LED SECTION ==========
+    // Border around target LEDs area
+    s += `<rect x="685" y="135" width="210" height="310" fill="none" stroke="#3a5a80" stroke-width="1" rx="3"/>`;
+
+    // Horizontal separator lines between LED groups (column-specific)
+    // Between SOTF and ZONE 1 (left column only)
+    s += `<line x1="690" y1="237" x2="780" y2="237" stroke="${CONFIG.white}" stroke-width="1" opacity="0.5"/>`;
+    // Between ZONE 4 and PHASE A (left column only)
+    s += `<line x1="690" y1="337" x2="780" y2="337" stroke="${CONFIG.white}" stroke-width="1" opacity="0.5"/>`;
+    // Between 51 and 79 RESET (right column only)
+    s += `<line x1="800" y1="187" x2="890" y2="187" stroke="${CONFIG.white}" stroke-width="1" opacity="0.5"/>`;
+    // Between BKR CLOSE and BKR FAIL (right column only)
+    s += `<line x1="800" y1="312" x2="890" y2="312" stroke="${CONFIG.white}" stroke-width="1" opacity="0.5"/>`;
+
+    targetLEDs.forEach(led => {
+        s += `<circle id="${led.id}" cx="${led.x}" cy="${led.y}" r="4" fill="${CONFIG.ledOff}" stroke="#1a2a3a" stroke-width="0.5"/>`;
+        s += `<text x="${led.x + 10}" y="${led.y + 4}" fill="${CONFIG.white}" font-size="10" font-weight="bold">${led.label}</text>`;
+    });
+
+    // ========== PUSHBUTTON SECTION ==========
+    // White background with rounded corners
+    s += `<rect x="${BUTTON_BOX.x}" y="${BUTTON_BOX.y}" width="${BUTTON_BOX.width}" height="${BUTTON_BOX.height}"
+               fill="${CONFIG.lightGrey}" stroke="#a0a0a0" stroke-width="1" rx="6"/>`;
+
+    const rowHeight = BUTTON_BOX.height / 6;
+    const colWidth = BUTTON_BOX.width / 2;
+
+    // Draw horizontal separator lines
+    for (let i = 1; i < 6; i++) {
+        const y = BUTTON_BOX.y + i * rowHeight;
+        s += `<line x1="${BUTTON_BOX.x + 5}" y1="${y}" x2="${BUTTON_BOX.x + BUTTON_BOX.width - 5}" y2="${y}" stroke="#b0b0b0" stroke-width="1"/>`;
+    }
+
+    // Draw vertical separator line
+    s += `<line x1="${BUTTON_BOX.x + colWidth}" y1="${BUTTON_BOX.y + 5}" x2="${BUTTON_BOX.x + colWidth}" y2="${BUTTON_BOX.y + BUTTON_BOX.height - 5}" stroke="#b0b0b0" stroke-width="1"/>`;
+
+    // Draw buttons with labels (matching reference layout)
+    // Reference: Left column has button on LEFT, label on RIGHT
+    //            Right column has label on LEFT, button on RIGHT
+    const buttonIds = [
+        ['btn_reclose_off', 'btn_reclose_on'],
+        ['btn_comm_off', 'btn_comm_on'],
+        ['btn_2_0', 'btn_2_1'],
+        ['btn_3_0', 'btn_3_1'],
+        ['btn_4_0', 'btn_4_1'],
+        ['btn_5_0', 'btn_5_1']
+    ];
+
+    for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 2; col++) {
+            const cellX = BUTTON_BOX.x + col * colWidth;
+            const cellY = BUTTON_BOX.y + row * rowHeight;
+            const cellCenterY = cellY + rowHeight / 2;
+
+            // Button position - on OUTSIDE edge of each column
+            const btnX = col === 0 ? cellX + 38 : cellX + colWidth - 38;
+
+            // LED position - small indicator near button
+            const ledX = col === 0 ? cellX + 70 : cellX + colWidth - 70;
+            const ledY = cellY + 12;
+
+            // Draw button circle (dark blue like reference) with ID for click handling
+            const btnId = buttonIds[row][col];
+            s += `<g id="${btnId}" cursor="pointer">
+                    <ellipse cx="${btnX}" cy="${cellCenterY}" rx="26" ry="20" fill="url(#btnGrad)" stroke="#0a1525" stroke-width="1.5"/>
+                  </g>`;
+
+            // Draw LED indicator (small rectangle)
+            const ledId = `btn_${row}_${col}_led`;
+            s += `<rect id="${ledId}" x="${ledX - 4}" y="${ledY - 2}" width="8" height="5" rx="1" fill="${CONFIG.ledOff}" stroke="#808080" stroke-width="0.5"/>`;
+
+            // Draw label for first 2 rows only - centered text
+            const label = buttonLabels[row][col];
+            if (label) {
+                const lines = label.split('\n');
+                // Center text in the label area (between button and cell edge)
+                // Left column: center between button (x+64) and cell right edge
+                // Right column: center between cell left edge and button (x+colWidth-64)
+                const labelXPos = col === 0 ? cellX + 105 : cellX + 40;
+
+                const totalHeight = lines.length * 12;
+                const startY = cellCenterY - totalHeight / 2 + 10;
+
+                lines.forEach((line, i) => {
+                    s += `<text x="${labelXPos}" y="${startY + i * 12}" fill="${CONFIG.panelColor}" font-size="10" font-weight="bold" text-anchor="middle">${line}</text>`;
+                });
+            }
+        }
+    }
+
+    svg.innerHTML = s;
+    attachEventListeners();
+}
+
+// ============================================================
+// EVENT HANDLING
+// ============================================================
+function attachEventListeners() {
+    ['up', 'down', 'left', 'right'].forEach(dir => {
+        document.getElementById('btn_' + dir)?.addEventListener('click', () => handleNav(dir));
+    });
+    document.getElementById('btn_esc')?.addEventListener('click', () => handleNav('esc'));
+    document.getElementById('btn_ent')?.addEventListener('click', () => handleNav('ent'));
+    document.getElementById('btn_target_reset')?.addEventListener('click', resetTargets);
+
+    // Reclose and Comm Scheme buttons
+    document.getElementById('btn_reclose_off')?.addEventListener('click', () => setReclose(false));
+    document.getElementById('btn_reclose_on')?.addEventListener('click', () => setReclose(true));
+    document.getElementById('btn_comm_off')?.addEventListener('click', () => setCommScheme(false));
+    document.getElementById('btn_comm_on')?.addEventListener('click', () => setCommScheme(true));
+
+    // Bottom left button triggers fault simulation
+    document.getElementById('btn_5_0')?.addEventListener('click', simulateFault);
+
+    // Bottom right button is HELP
+    document.getElementById('btn_5_1')?.addEventListener('click', toggleHelpMode);
+
+    // Add tooltip listeners for all LEDs when help mode is active
+    setupHelpTooltips();
+}
+
+function toggleHelpMode() {
+    state.helpMode = !state.helpMode;
+    updateHelpButtonLED();
+
+    const svg = document.getElementById('panel-svg');
+    if (state.helpMode) {
+        svg.classList.add('help-active');
+    } else {
+        svg.classList.remove('help-active');
+        hideTooltip();
+    }
+}
+
+function updateHelpButtonLED() {
+    const led = document.getElementById('btn_5_1_led');
+    if (led) {
+        led.setAttribute('fill', state.helpMode ? CONFIG.ledGreen : CONFIG.ledOff);
+    }
+}
+
+function setupLCDTooltips(tooltip, titleEl, descEl) {
+    const lcdCanvas = document.getElementById('lcd-canvas');
+    if (!lcdCanvas) return;
+
+    // Calculate line positions on the LCD
+    // Header is 22px, starts at y=0
+    // Content starts at y=28, each line is 24px tall
+    const headerHeight = 22;
+    const contentStart = 28;
+    const lineHeight = 24;
+
+    // Helper to show a tooltip
+    const showTooltip = (desc, e) => {
+        if (!desc) return;
+
+        const colonIndex = desc.indexOf(':');
+        const title = desc.substring(0, colonIndex);
+        const description = desc.substring(colonIndex + 1).trim();
+
+        titleEl.textContent = title;
+        descEl.textContent = description;
+
+        positionTooltip(e);
+        tooltip.classList.add('visible');
+    };
+
+    // Get visible menu items based on current scroll position
+    const getVisibleMenuItems = () => {
+        if (!state.currentMenu) return [];
+        const items = state.currentMenu.items;
+        const maxVisible = 8;
+        const start = Math.max(0, state.selectedIndex - 5);
+        const end = Math.min(items.length, start + maxVisible);
+        return items.slice(start, end);
+    };
+
+    // Get menu item at a specific content line index
+    const getMenuItemAtLine = (contentLineIndex) => {
+        const visibleItems = getVisibleMenuItems();
+        if (contentLineIndex >= 0 && contentLineIndex < visibleItems.length) {
+            return visibleItems[contentLineIndex];
+        }
+        return null;
+    };
+
+    lcdCanvas.addEventListener('mousemove', (e) => {
+        // Only show tooltips when help mode is active
+        if (!state.helpMode) {
+            tooltip.classList.remove('visible');
+            return;
+        }
+
+        // Get canvas bounding rect to calculate relative position
+        const rect = lcdCanvas.getBoundingClientRect();
+        const scaleY = lcdCanvas.height / rect.height;
+        const relativeY = (e.clientY - rect.top) * scaleY;
+
+        // Handle EVENT display mode
+        if (state.displayMode === 'event' && state.faultActive && state.eventIndex === 0) {
+            let lineIndex = -1;
+
+            if (relativeY >= 0 && relativeY < headerHeight) {
+                lineIndex = 0;
+            } else if (relativeY >= contentStart) {
+                const contentY = relativeY - contentStart;
+                const contentLineIndex = Math.floor(contentY / lineHeight);
+                if (contentLineIndex >= 0 && contentLineIndex < 6) {
+                    lineIndex = contentLineIndex + 1;
+                }
+            }
+
+            if (lineIndex >= 0 && lineIndex <= 6) {
+                showTooltip(eventHelpDescriptions[lineIndex], e);
+            } else {
+                tooltip.classList.remove('visible');
+            }
+            return;
+        }
+
+        // Handle MENU display mode
+        if (state.displayMode === 'menu' && state.currentMenu) {
+            // Check if hovering over header (menu title)
+            if (relativeY >= 0 && relativeY < headerHeight) {
+                const menuTitle = state.currentMenu.title;
+                const desc = menuHelpDescriptions[menuTitle] || menuHelpDescriptions[menuTitle.replace(' MENU', '')];
+                if (desc) {
+                    showTooltip(desc, e);
+                } else {
+                    tooltip.classList.remove('visible');
+                }
+                return;
+            }
+
+            // Check if hovering over a menu item
+            if (relativeY >= contentStart) {
+                const contentY = relativeY - contentStart;
+                const contentLineIndex = Math.floor(contentY / lineHeight);
+                const menuItem = getMenuItemAtLine(contentLineIndex);
+
+                if (menuItem) {
+                    const desc = menuHelpDescriptions[menuItem];
+                    if (desc) {
+                        showTooltip(desc, e);
+                    } else {
+                        tooltip.classList.remove('visible');
+                    }
+                } else {
+                    tooltip.classList.remove('visible');
+                }
+            } else {
+                tooltip.classList.remove('visible');
+            }
+            return;
+        }
+
+        // No tooltip for other display modes
+        tooltip.classList.remove('visible');
+    });
+
+    lcdCanvas.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('visible');
+    });
+
+    // Touch support for LCD tooltips
+    lcdCanvas.addEventListener('touchstart', (e) => {
+        if (!state.helpMode) return;
+
+        const touch = e.touches[0];
+        const rect = lcdCanvas.getBoundingClientRect();
+        const scaleY = lcdCanvas.height / rect.height;
+        const relativeY = (touch.clientY - rect.top) * scaleY;
+
+        let desc = null;
+
+        // Handle EVENT display mode
+        if (state.displayMode === 'event' && state.faultActive && state.eventIndex === 0) {
+            let lineIndex = -1;
+
+            if (relativeY >= 0 && relativeY < headerHeight) {
+                lineIndex = 0;
+            } else if (relativeY >= contentStart) {
+                const contentY = relativeY - contentStart;
+                const contentLineIndex = Math.floor(contentY / lineHeight);
+                if (contentLineIndex >= 0 && contentLineIndex < 6) {
+                    lineIndex = contentLineIndex + 1;
+                }
+            }
+
+            if (lineIndex >= 0 && lineIndex <= 6) {
+                desc = eventHelpDescriptions[lineIndex];
+            }
+        }
+
+        // Handle MENU display mode
+        if (state.displayMode === 'menu' && state.currentMenu) {
+            if (relativeY >= 0 && relativeY < headerHeight) {
+                const menuTitle = state.currentMenu.title;
+                desc = menuHelpDescriptions[menuTitle] || menuHelpDescriptions[menuTitle.replace(' MENU', '')];
+            } else if (relativeY >= contentStart) {
+                const contentY = relativeY - contentStart;
+                const contentLineIndex = Math.floor(contentY / lineHeight);
+                const menuItem = getMenuItemAtLine(contentLineIndex);
+                if (menuItem) {
+                    desc = menuHelpDescriptions[menuItem];
+                }
+            }
+        }
+
+        if (desc) {
+            const colonIndex = desc.indexOf(':');
+            const title = desc.substring(0, colonIndex);
+            const description = desc.substring(colonIndex + 1).trim();
+
+            titleEl.textContent = title;
+            descEl.textContent = description;
+
+            positionTooltip({ clientX: touch.clientX, clientY: touch.clientY });
+            tooltip.classList.add('visible');
+
+            setTimeout(() => tooltip.classList.remove('visible'), 4000);
+        }
+    }, { passive: true });
+}
+
+function setupHelpTooltips() {
+    const tooltip = document.getElementById('help-tooltip');
+    const titleEl = tooltip.querySelector('.tooltip-title');
+    const descEl = tooltip.querySelector('.tooltip-desc');
+
+    // Setup LCD canvas tooltips for event summary
+    setupLCDTooltips(tooltip, titleEl, descEl);
+
+    // Get all LED elements and their labels
+    const allLedIds = [
+        'led_enabled', 'led_trip',
+        ...targetLEDs.map(led => led.id)
+    ];
+
+    allLedIds.forEach(ledId => {
+        const ledEl = document.getElementById(ledId);
+        if (!ledEl) return;
+
+        const handleMouseEnter = (e) => {
+            if (!state.helpMode) return;
+
+            const desc = helpDescriptions[ledId];
+            if (!desc) return;
+
+            // Parse title and description
+            const colonIndex = desc.indexOf(':');
+            const title = desc.substring(0, colonIndex);
+            const description = desc.substring(colonIndex + 1).trim();
+
+            titleEl.textContent = title;
+            descEl.textContent = description;
+
+            positionTooltip(e);
+            tooltip.classList.add('visible');
+        };
+
+        const handleMouseMove = (e) => {
+            if (!state.helpMode || !tooltip.classList.contains('visible')) return;
+            positionTooltip(e);
+        };
+
+        const handleMouseLeave = () => {
+            tooltip.classList.remove('visible');
+        };
+
+        // For touch devices
+        const handleTouchStart = (e) => {
+            if (!state.helpMode) return;
+            e.preventDefault();
+
+            const desc = helpDescriptions[ledId];
+            if (!desc) return;
+
+            const colonIndex = desc.indexOf(':');
+            const title = desc.substring(0, colonIndex);
+            const description = desc.substring(colonIndex + 1).trim();
+
+            titleEl.textContent = title;
+            descEl.textContent = description;
+
+            // Position near touch point
+            const touch = e.touches[0];
+            positionTooltip({ clientX: touch.clientX, clientY: touch.clientY });
+            tooltip.classList.add('visible');
+
+            // Hide after delay
+            setTimeout(() => tooltip.classList.remove('visible'), 4000);
+        };
+
+        ledEl.addEventListener('mouseenter', handleMouseEnter);
+        ledEl.addEventListener('mousemove', handleMouseMove);
+        ledEl.addEventListener('mouseleave', handleMouseLeave);
+        ledEl.addEventListener('touchstart', handleTouchStart, { passive: false });
+    });
+
+    // Also add listeners to text labels
+    document.querySelectorAll('#panel-svg text').forEach(textEl => {
+        const text = textEl.textContent;
+        // Find matching LED by label
+        const matchingLed = targetLEDs.find(led => led.label === text);
+        if (!matchingLed && text !== 'ENABLED' && text !== 'TRIP') return;
+
+        const ledId = matchingLed ? matchingLed.id : (text === 'ENABLED' ? 'led_enabled' : 'led_trip');
+
+        textEl.style.cursor = 'inherit';
+
+        textEl.addEventListener('mouseenter', (e) => {
+            if (!state.helpMode) return;
+
+            const desc = helpDescriptions[ledId];
+            if (!desc) return;
+
+            const colonIndex = desc.indexOf(':');
+            const title = desc.substring(0, colonIndex);
+            const description = desc.substring(colonIndex + 1).trim();
+
+            titleEl.textContent = title;
+            descEl.textContent = description;
+
+            positionTooltip(e);
+            tooltip.classList.add('visible');
+        });
+
+        textEl.addEventListener('mousemove', (e) => {
+            if (!state.helpMode || !tooltip.classList.contains('visible')) return;
+            positionTooltip(e);
+        });
+
+        textEl.addEventListener('mouseleave', () => {
+            tooltip.classList.remove('visible');
+        });
+
+        textEl.addEventListener('touchstart', (e) => {
+            if (!state.helpMode) return;
+            e.preventDefault();
+
+            const desc = helpDescriptions[ledId];
+            if (!desc) return;
+
+            const colonIndex = desc.indexOf(':');
+            const title = desc.substring(0, colonIndex);
+            const description = desc.substring(colonIndex + 1).trim();
+
+            titleEl.textContent = title;
+            descEl.textContent = description;
+
+            const touch = e.touches[0];
+            positionTooltip({ clientX: touch.clientX, clientY: touch.clientY });
+            tooltip.classList.add('visible');
+
+            setTimeout(() => tooltip.classList.remove('visible'), 4000);
+        }, { passive: false });
+    });
+
+    // Add tooltip listeners for control buttons
+    const buttonIds = ['btn_target_reset', 'btn_reclose_off', 'btn_reclose_on', 'btn_comm_off', 'btn_comm_on', 'btn_5_0'];
+    const buttonHelpKeyMap = {
+        'btn_5_0': 'btn_fault' // Map FAULT button to its help description
+    };
+    buttonIds.forEach(btnId => {
+        const btnEl = document.getElementById(btnId);
+        if (!btnEl) return;
+
+        const helpKey = buttonHelpKeyMap[btnId] || btnId;
+
+        const addTooltipEvents = (el) => {
+            el.addEventListener('mouseenter', (e) => {
+                if (!state.helpMode) return;
+                const desc = helpDescriptions[helpKey];
+                if (!desc) return;
+
+                const colonIndex = desc.indexOf(':');
+                const title = desc.substring(0, colonIndex);
+                const description = desc.substring(colonIndex + 1).trim();
+
+                titleEl.textContent = title;
+                descEl.textContent = description;
+                positionTooltip(e);
+                tooltip.classList.add('visible');
+            });
+
+            el.addEventListener('mousemove', (e) => {
+                if (!state.helpMode || !tooltip.classList.contains('visible')) return;
+                positionTooltip(e);
+            });
+
+            el.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('visible');
+            });
+
+            el.addEventListener('touchstart', (e) => {
+                if (!state.helpMode) return;
+                // Don't prevent default - allow the button click to work
+                const desc = helpDescriptions[helpKey];
+                if (!desc) return;
+
+                const colonIndex = desc.indexOf(':');
+                const title = desc.substring(0, colonIndex);
+                const description = desc.substring(colonIndex + 1).trim();
+
+                titleEl.textContent = title;
+                descEl.textContent = description;
+
+                const touch = e.touches[0];
+                positionTooltip({ clientX: touch.clientX, clientY: touch.clientY });
+                tooltip.classList.add('visible');
+
+                setTimeout(() => tooltip.classList.remove('visible'), 4000);
+            }, { passive: true });
+        };
+
+        // Add events to the button group and its children
+        addTooltipEvents(btnEl);
+    });
+}
+
+function positionTooltip(e) {
+    const tooltip = document.getElementById('help-tooltip');
+    const padding = 15;
+
+    let x = e.clientX + padding;
+    let y = e.clientY + padding;
+
+    // Keep tooltip on screen
+    const rect = tooltip.getBoundingClientRect();
+    const tooltipWidth = 350;
+    const tooltipHeight = rect.height || 150;
+
+    if (x + tooltipWidth > window.innerWidth) {
+        x = e.clientX - tooltipWidth - padding;
+    }
+    if (y + tooltipHeight > window.innerHeight) {
+        y = e.clientY - tooltipHeight - padding;
+    }
+    if (x < 0) x = padding;
+    if (y < 0) y = padding;
+
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+}
+
+function hideTooltip() {
+    document.getElementById('help-tooltip').classList.remove('visible');
+}
+
+function setReclose(on) {
+    state.recloseOn = on;
+    updatePushbuttonLEDs();
+
+    // Update 79 target LEDs based on reclose state
+    // When RECLOSE ON: 79 RESET lit, 79 LOCKOUT off
+    // When RECLOSE OFF: 79 RESET off, 79 LOCKOUT lit
+    state.leds['led_79_reset'] = on;
+    state.leds['led_79_lockout'] = !on;
+    render();
+}
+
+function setCommScheme(on) {
+    state.commSchemeOn = on;
+    updatePushbuttonLEDs();
+}
+
+function updatePushbuttonLEDs() {
+    // Row 0: Reclose - left LED off when reclose off, right LED on when reclose on
+    const recloseLedLeft = document.getElementById('btn_0_0_led');
+    const recloseLedRight = document.getElementById('btn_0_1_led');
+    if (recloseLedLeft) recloseLedLeft.setAttribute('fill', state.recloseOn ? CONFIG.ledOff : CONFIG.ledGreen);
+    if (recloseLedRight) recloseLedRight.setAttribute('fill', state.recloseOn ? CONFIG.ledGreen : CONFIG.ledOff);
+
+    // Row 1: Comm Scheme - left LED off when comm off, right LED on when comm on
+    const commLedLeft = document.getElementById('btn_1_0_led');
+    const commLedRight = document.getElementById('btn_1_1_led');
+    if (commLedLeft) commLedLeft.setAttribute('fill', state.commSchemeOn ? CONFIG.ledOff : CONFIG.ledGreen);
+    if (commLedRight) commLedRight.setAttribute('fill', state.commSchemeOn ? CONFIG.ledGreen : CONFIG.ledOff);
+}
+
+function handleNav(dir) {
+    if (state.displayMode === 'rotating') {
+        if (dir === 'down' || dir === 'right') {
+            enterMenu(mainMenu);
+        } else if (dir === 'up') {
+            state.rotatingIndex = (state.rotatingIndex - 1 + rotatingScreens.length) % rotatingScreens.length;
+            renderRotating();
+        }
+    } else if (state.displayMode === 'menu') {
+        if (dir === 'up') {
+            state.selectedIndex = Math.max(0, state.selectedIndex - 1);
+            renderMenu();
+        } else if (dir === 'down') {
+            state.selectedIndex = Math.min(state.currentMenu.items.length - 1, state.selectedIndex + 1);
+            renderMenu();
+        } else if (dir === 'esc' || dir === 'left') {
+            if (state.menuStack.length > 0) {
+                const prev = state.menuStack.pop();
+                state.currentMenu = prev.menu;
+                state.selectedIndex = prev.index;
+                renderMenu();
+            } else {
+                exitToRotating();
+            }
+        } else if (dir === 'ent' || dir === 'right') {
+            const item = state.currentMenu.items[state.selectedIndex];
+            // Handle submenus
+            const submenus = {
+                'METER': meterMenu,
+                'EVENTS': eventsMenu,
+                'BREAKER MONITOR': breakerMonitorMenu,
+                'RELAY ELEMENTS': relayElementsMenu,
+                'LOCAL CONTROL': localControlMenu,
+                'SET/SHOW': setShowMenu,
+                'RELAY STATUS': relayStatusMenu
+            };
+            if (submenus[item]) {
+                state.menuStack.push({ menu: state.currentMenu, index: state.selectedIndex });
+                state.currentMenu = submenus[item];
+                state.selectedIndex = 0;
+                renderMenu();
+            } else if (item === 'EVENT SUMMARY') {
+                // Show event summary (works even without fault, shows last event or no events)
+                state.displayMode = 'event';
+                state.eventIndex = 0;
+                renderEvent();
+            } else if (staticScreens[item]) {
+                // Show static screen for this item
+                state.displayMode = 'static';
+                state.currentStaticScreen = item;
+                renderStaticScreen(item);
+            }
+        }
+    } else if (state.displayMode === 'static') {
+        if (dir === 'esc' || dir === 'left') {
+            state.displayMode = 'menu';
+            renderMenu();
+        }
+    } else if (state.displayMode === 'event') {
+        if (dir === 'down' || dir === 'right') {
+            state.eventIndex = Math.min(eventScreens.length - 1, state.eventIndex + 1);
+            renderEvent();
+        } else if (dir === 'up' || dir === 'left') {
+            state.eventIndex = Math.max(0, state.eventIndex - 1);
+            renderEvent();
+        } else if (dir === 'esc') {
+            state.displayMode = 'menu';
+            renderMenu();
+        }
+    }
+}
+
+function enterMenu(menu) {
+    stopRotating();
+    state.displayMode = 'menu';
+    state.currentMenu = menu;
+    state.selectedIndex = 0;
+    state.menuStack = [];
+    renderMenu();
+}
+
+function exitToRotating() {
+    state.displayMode = 'rotating';
+    state.menuStack = [];
+    startRotating();
+}
+
+// ============================================================
+// FAULT SIMULATION
+// ============================================================
+function simulateFault() {
+    state.faultActive = true;
+
+    state.leds['led_trip'] = true;
+    state.leds['led_time'] = true;
+    state.leds['led_zone2'] = true;
+    state.leds['led_phase_b'] = true;
+    state.leds['led_phase_c'] = true;
+    state.leds['led_ground'] = true;
+    state.leds['led_50'] = true;
+    state.leds['led_79_reset'] = false;
+    state.leds['led_79_lockout'] = true;
+
+    render();
+
+    // Flash the FAULT button LED red twice then turn off
+    const faultLed = document.getElementById('btn_5_0_led');
+    if (faultLed) {
+        faultLed.setAttribute('fill', CONFIG.ledRed);
+        setTimeout(() => {
+            faultLed.setAttribute('fill', CONFIG.ledOff);
+            setTimeout(() => {
+                faultLed.setAttribute('fill', CONFIG.ledRed);
+                setTimeout(() => {
+                    faultLed.setAttribute('fill', CONFIG.ledOff);
+                }, 150);
+            }, 150);
+        }, 150);
+    }
+
+    stopRotating();
+    state.displayMode = 'event';
+    state.eventIndex = 0;
+    renderEvent();
+}
+
+function resetTargets() {
+    // LAMP TEST: Turn on ALL LEDs briefly
+    state.leds['led_enabled'] = true;
+    state.leds['led_trip'] = true;
+    targetLEDs.forEach(led => state.leds[led.id] = true);
+    render();
+
+    // Also light up all pushbutton LEDs for lamp test
+    for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 2; col++) {
+            const led = document.getElementById(`btn_${row}_${col}_led`);
+            if (led) led.setAttribute('fill', CONFIG.ledGreen);
+        }
+    }
+
+    // After 750ms, clear fault targets and restore normal state
+    setTimeout(() => {
+        state.faultActive = false;
+
+        // Clear all fault-related targets
+        targetLEDs.forEach(led => state.leds[led.id] = false);
+        state.leds['led_trip'] = false;
+
+        // Restore normal status LEDs
+        state.leds['led_enabled'] = true;
+        state.leds['led_pmcu_ok'] = true;
+        state.leds['led_irig_lock'] = true;
+
+        // 79 state based on current reclose setting
+        state.leds['led_79_reset'] = state.recloseOn;
+        state.leds['led_79_lockout'] = !state.recloseOn;
+
+        render();
+        updatePushbuttonLEDs();
+
+        // Turn off unlabeled pushbutton LEDs (rows 2-5, except HELP button)
+        for (let row = 2; row < 6; row++) {
+            for (let col = 0; col < 2; col++) {
+                if (row === 5 && col === 1) continue; // Skip HELP button LED
+                const led = document.getElementById(`btn_${row}_${col}_led`);
+                if (led) led.setAttribute('fill', CONFIG.ledOff);
+            }
+        }
+
+        // Turn off help mode
+        state.helpMode = false;
+        updateHelpButtonLED();
+        hideTooltip();
+        document.getElementById('panel-svg')?.classList.remove('help-active');
+
+        exitToRotating();
+    }, 750);
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+function startRotating() {
+    stopRotating();
+    renderRotating();
+    state.rotatingTimer = setInterval(() => {
+        state.rotatingIndex = (state.rotatingIndex + 1) % rotatingScreens.length;
+        renderRotating();
+    }, 4000);
+}
+
+function stopRotating() {
+    if (state.rotatingTimer) {
+        clearInterval(state.rotatingTimer);
+        state.rotatingTimer = null;
+    }
+}
+
+function renderRotating() {
+    const screen = rotatingScreens[state.rotatingIndex];
+    setLCD(screen.lines, screen.header);
+}
+
+function renderMenu() {
+    const items = state.currentMenu.items;
+    const lines = [];
+    const maxVisible = 8;
+    const start = Math.max(0, state.selectedIndex - 5);
+    const end = Math.min(items.length, start + maxVisible);
+
+    // Check if there are items above or below current view
+    const hasAbove = start > 0;
+    const hasBelow = end < items.length;
+
+    for (let i = start; i < end; i++) {
+        const lineIdx = i - start;
+        const prefix = (i === state.selectedIndex ? '>' : ' ');
+        let suffix = '';
+
+        // Add scroll indicators on right side
+        if (lineIdx === 0 && hasAbove) {
+            suffix = ' ^'; // Up arrow indicator
+        } else if (lineIdx === end - start - 1 && hasBelow) {
+            suffix = ' v'; // Down arrow indicator
+        }
+
+        lines.push(prefix + items[i] + suffix);
+    }
+
+    // Add scroll bar on the right side of LCD
+    const scrollInfo = items.length > maxVisible ? {
+        position: state.selectedIndex / (items.length - 1),
+        hasAbove: hasAbove,
+        hasBelow: hasBelow
+    } : null;
+
+    setLCD(lines, state.currentMenu.title, scrollInfo);
+}
+
+function renderEvent() {
+    if (state.faultActive) {
+        const screenData = eventScreens[state.eventIndex]();
+        setLCD(screenData.slice(1), screenData[0]);
+    } else {
+        // No fault active, show "no events" message
+        setLCD(['', 'NO RECENT EVENTS', '', 'PRESS ESC TO RETURN', '', '', '', ''], 'EVENT SUMMARY');
+    }
+}
+
+function renderStaticScreen(screenName) {
+    const screen = staticScreens[screenName];
+    if (screen) {
+        setLCD(screen.lines, screen.title);
+    }
+}
+
+function render() {
+    document.getElementById('led_enabled')?.setAttribute('fill', state.leds['led_enabled'] ? CONFIG.ledGreen : CONFIG.ledOff);
+    document.getElementById('led_trip')?.setAttribute('fill', state.leds['led_trip'] ? CONFIG.ledRed : CONFIG.ledOff);
+
+    targetLEDs.forEach(led => {
+        const el = document.getElementById(led.id);
+        if (el) el.setAttribute('fill', state.leds[led.id] ? CONFIG.ledAmber : CONFIG.ledOff);
+    });
+}
+
+// ============================================================
+// LCD
+// ============================================================
+let lcdCanvas, lcdCtx;
+
+function initLCD() {
+    lcdCanvas = document.getElementById('lcd-canvas');
+    if (lcdCanvas) lcdCtx = lcdCanvas.getContext('2d');
+}
+
+function setLCD(lines, header, scrollInfo) {
+    if (!lcdCtx) return;
+
+    const canvasWidth = 265;
+    const canvasHeight = 255;
+
+    // Clear with LCD background
+    lcdCtx.fillStyle = CONFIG.lcdBackground;
+    lcdCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // Use a monospace font for clear LCD text
+    lcdCtx.font = 'bold 14px "Courier New", monospace';
+    lcdCtx.textBaseline = 'top';
+
+    const lineHeight = 24;
+    let y = 6;
+
+    if (header) {
+        // Header bar background
+        lcdCtx.fillStyle = CONFIG.lcdForeground;
+        lcdCtx.fillRect(0, 0, canvasWidth, 22);
+        // Header text (inverted)
+        lcdCtx.fillStyle = CONFIG.lcdBackground;
+        lcdCtx.fillText(header, 6, 5);
+        y = 28;
+    }
+
+    // Draw content lines
+    lcdCtx.fillStyle = CONFIG.lcdForeground;
+    (Array.isArray(lines) ? lines : [lines]).forEach(line => {
+        if (y > canvasHeight - 20) return;
+        lcdCtx.fillText(line || '', 6, y);
+        y += lineHeight;
+    });
+
+    // Draw scroll bar if scrollInfo provided
+    if (scrollInfo) {
+        const scrollBarX = canvasWidth - 12;
+        const scrollBarTop = header ? 28 : 6;
+        const scrollBarHeight = canvasHeight - scrollBarTop - 10;
+
+        // Draw scroll track
+        lcdCtx.fillStyle = CONFIG.lcdForeground;
+        lcdCtx.globalAlpha = 0.3;
+        lcdCtx.fillRect(scrollBarX, scrollBarTop, 6, scrollBarHeight);
+        lcdCtx.globalAlpha = 1.0;
+
+        // Draw scroll position indicator
+        const indicatorHeight = Math.max(20, scrollBarHeight * 0.2);
+        const indicatorY = scrollBarTop + (scrollBarHeight - indicatorHeight) * scrollInfo.position;
+        lcdCtx.fillStyle = CONFIG.lcdForeground;
+        lcdCtx.fillRect(scrollBarX, indicatorY, 6, indicatorHeight);
+
+        // Draw up arrow if there are items above
+        if (scrollInfo.hasAbove) {
+            lcdCtx.beginPath();
+            lcdCtx.moveTo(scrollBarX + 3, scrollBarTop - 8);
+            lcdCtx.lineTo(scrollBarX, scrollBarTop - 2);
+            lcdCtx.lineTo(scrollBarX + 6, scrollBarTop - 2);
+            lcdCtx.closePath();
+            lcdCtx.fill();
+        }
+
+        // Draw down arrow if there are items below
+        if (scrollInfo.hasBelow) {
+            const arrowY = scrollBarTop + scrollBarHeight + 2;
+            lcdCtx.beginPath();
+            lcdCtx.moveTo(scrollBarX + 3, arrowY + 8);
+            lcdCtx.lineTo(scrollBarX, arrowY + 2);
+            lcdCtx.lineTo(scrollBarX + 6, arrowY + 2);
+            lcdCtx.closePath();
+            lcdCtx.fill();
+        }
+    }
+}
+
+// ============================================================
+// KEYBOARD
+// ============================================================
+document.addEventListener('keydown', e => {
+    const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', Escape: 'esc', Enter: 'ent' };
+    if (map[e.key]) { e.preventDefault(); handleNav(map[e.key]); }
+    if (e.key === 'f' || e.key === 'F') simulateFault();
+    if (e.key === 'r' || e.key === 'R') resetTargets();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+    generateSVG();
+    initLCD();
+    render();
+    updatePushbuttonLEDs();
+    startRotating();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
